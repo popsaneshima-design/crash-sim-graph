@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>衝突シミュレーション 発生加速度グラフ</title>
+<style>
+  :root {
+    --color-text-secondary: #555;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    max-width: 960px;
+    margin: 24px auto;
+    padding: 0 16px;
+    color: #222;
+  }
+</style>
+</head>
+<body>
+
+<div style="margin: 0 0 1rem;">
+  <div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">発生加速度（m/s²）— 衝突シミュレーション再現</div>
+  <div style="font-size: 12px; color: var(--color-text-secondary);">時速80km / 車両質量1,000kg / 緩衝ボックス10個構成</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; font-size: 12px; color: var(--color-text-secondary);">
+  <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 3px; background: #1a2c5b;"></span>車両（ピーク約189 m/s²）</span>
+  <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 3px; background: #d4537e;"></span>支持板 A2</span>
+  <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 3px; background: #ef9f27;"></span>支持板 A4(80kg)</span>
+  <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 3px; background: #5dcaa5;"></span>支持板 B3(200kg)</span>
+</div>
+
+<div style="position: relative; width: 100%; height: 380px;">
+  <canvas id="crashChart" role="img" aria-label="衝突シミュレーションの発生加速度グラフ。時間0から300msの範囲で、車両は約180m/s²付近を推移し200ms以降減衰、支持板A2・A4・B3は鋭いスパイク状のピークを示す。"></canvas>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+(function(){
+  const N = 301;
+  const t = Array.from({length: N}, (_, i) => i);
+
+  const vehicle = t.map(ms => {
+    if (ms < 5) return 100 + ms * 4;
+    if (ms < 30) return 120 + (ms - 5) * 2.4 + Math.sin(ms * 0.8) * 8;
+    if (ms < 170) {
+      const base = 175 + Math.sin(ms * 0.15) * 12;
+      return base + Math.sin(ms * 0.6) * 4;
+    }
+    if (ms < 280) {
+      const decay = 185 * Math.exp(-(ms - 170) / 75);
+      return decay + Math.sin(ms * 0.4) * 5;
+    }
+    return Math.max(0, 30 * Math.exp(-(ms - 280) / 15));
+  });
+
+  function seededRand(seed) {
+    let s = seed;
+    return () => {
+      s = (s * 9301 + 49297) % 233280;
+      return s / 233280;
+    };
+  }
+  const randA2 = seededRand(12345);
+  const A2 = t.map(ms => {
+    if (ms < 5 || ms > 285) return Math.max(0, 50 + randA2() * 100);
+    const r = randA2();
+    if (r > 0.78) return 600 + randA2() * 400;
+    if (r > 0.55) return 200 + randA2() * 250;
+    return 30 + randA2() * 80;
+  });
+
+  const randA4 = seededRand(67890);
+  const A4 = t.map(ms => {
+    let base = randA4() * 30;
+    if (ms < 60) {
+      const r = randA4();
+      if (r > 0.7) base = 350 + randA4() * 350;
+      else if (r > 0.5) base = 150 + randA4() * 200;
+      else base = 30 + randA4() * 80;
+    } else if (ms >= 100 && ms < 175) {
+      const r = randA4();
+      if (r > 0.78) base = 250 + randA4() * 200;
+      else if (r > 0.55) base = 80 + randA4() * 150;
+      else base = 20 + randA4() * 50;
+    } else if (ms >= 220 && ms < 290) {
+      const r = randA4();
+      if (r > 0.82) base = 100 + randA4() * 180;
+      else base = 10 + randA4() * 60;
+    }
+    return base;
+  });
+
+  const randB3 = seededRand(24680);
+  const B3 = t.map(ms => {
+    if (ms < 50) {
+      const r = randB3();
+      if (r > 0.85) return 400 + randB3() * 250;
+      if (r > 0.6) return 150 + randB3() * 150;
+      return 20 + randB3() * 80;
+    }
+    if (ms < 120) {
+      return 10 + randB3() * 50;
+    }
+    return Math.max(0, randB3() * 30);
+  });
+
+  const ctx = document.getElementById('crashChart');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: t,
+      datasets: [
+        { label: '車両', data: vehicle, borderColor: '#1a2c5b', backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 0, tension: 0.2, order: 1 },
+        { label: '支持板 A2', data: A2, borderColor: '#d4537e', backgroundColor: 'transparent', borderWidth: 0.6, pointRadius: 0, tension: 0, order: 4 },
+        { label: '支持板 A4(80kg)', data: A4, borderColor: '#ef9f27', backgroundColor: 'transparent', borderWidth: 0.8, pointRadius: 0, tension: 0, order: 3 },
+        { label: '支持板 B3(200kg)', data: B3, borderColor: '#5dcaa5', backgroundColor: 'transparent', borderWidth: 0.8, pointRadius: 0, tension: 0, order: 2 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: 'nearest', intersect: false },
+      scales: {
+        x: { type: 'linear', min: 0, max: 300, title: { display: true, text: '時間 (ms)', font: { size: 12 } }, ticks: { stepSize: 50, font: { size: 11 } }, grid: { color: 'rgba(128,128,128,0.15)' } },
+        y: { min: 0, max: 1000, title: { display: true, text: '加速度 (m/s²)', font: { size: 12 } }, ticks: { stepSize: 100, font: { size: 11 } }, grid: { color: 'rgba(128,128,128,0.15)' } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: true,
+          callbacks: {
+            title: (items) => items[0].parsed.x + ' ms',
+            label: (item) => item.dataset.label + ': ' + Math.round(item.parsed.y) + ' m/s²'
+          }
+        }
+      }
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
