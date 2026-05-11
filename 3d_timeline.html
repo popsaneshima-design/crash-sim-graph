@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ショックプロテクター SP-100 — タイムライン版</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:"Hiragino Sans","Yu Gothic","Meiryo",sans-serif;background:#0a1628;color:#fff}
+#scene-container{position:fixed;inset:0;width:100%;height:100%}
+#scene-container canvas{display:block;width:100%;height:100%}
+
+.hud{position:fixed;top:0;left:0;right:0;padding:24px 32px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:10}
+.hud-title{font-size:22px;font-weight:600;letter-spacing:.02em;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.hud-subtitle{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px;letter-spacing:1px}
+.hud-meta{text-align:right;font-size:12px;color:rgba(255,255,255,.65);line-height:1.6;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.tag-v3{display:inline-block;background:#f9b234;color:#1a1a1a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;letter-spacing:1px;vertical-align:middle}
+
+.gauges{position:fixed;left:32px;bottom:160px;display:flex;flex-direction:column;gap:14px;pointer-events:none;z-index:10}
+.gauge{background:rgba(10,22,40,.75);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:14px 20px;min-width:240px}
+.gauge-label{font-size:11px;color:rgba(255,255,255,.6);letter-spacing:1.5px;margin-bottom:4px}
+.gauge-value-row{display:flex;align-items:baseline;gap:6px}
+.gauge-value{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.gauge-unit{font-size:13px;color:rgba(255,255,255,.5)}
+.gauge-bar-bg{margin-top:10px;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.gauge-bar{height:100%;background:#378ADD;transition:width .05s linear,background .05s linear;border-radius:3px}
+
+.damage-meter{position:fixed;right:32px;bottom:160px;background:rgba(10,22,40,.75);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:14px 20px;min-width:200px;z-index:10}
+.damage-meter .gauge-label{font-size:11px;color:rgba(255,255,255,.6);letter-spacing:1.5px;margin-bottom:4px}
+.damage-value{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.damage-bar-bg{margin-top:10px;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.damage-bar{height:100%;background:#5dcaa5;transition:width .1s linear,background .1s linear;border-radius:3px}
+
+/* タイムラインエリア（画面下部） */
+.timeline-area{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:min(900px,calc(100vw - 64px));background:rgba(10,22,40,.92);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px 20px;z-index:30}
+
+.timeline-row1{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.btn-icon{background:transparent;border:1px solid rgba(255,255,255,.25);color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:all .15s;flex-shrink:0;font-size:14px}
+.btn-icon:hover:not(:disabled){background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.5)}
+.btn-icon.primary{background:#f9b234;color:#1a1a1a;border-color:#f9b234;width:44px;height:44px;font-size:16px}
+.btn-icon.primary:hover{background:#ffc55a;border-color:#ffc55a}
+
+.time-display{font-variant-numeric:tabular-nums;font-size:13px;color:rgba(255,255,255,.85);letter-spacing:.5px;min-width:100px;text-align:center}
+.time-display .current{font-weight:600;color:#f9b234}
+.time-display .total{color:rgba(255,255,255,.5)}
+
+.speed-mini-selector{display:flex;gap:2px;background:rgba(0,0,0,.3);border-radius:20px;padding:3px;margin-left:auto}
+.speed-mini{background:transparent;border:none;color:rgba(255,255,255,.7);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:500;letter-spacing:.5px}
+.speed-mini:hover{background:rgba(255,255,255,.08)}
+.speed-mini.active{background:#f9b234;color:#1a1a1a}
+
+.playback-rate{display:flex;gap:2px;background:rgba(0,0,0,.3);border-radius:20px;padding:3px}
+.rate-btn{background:transparent;border:none;color:rgba(255,255,255,.7);padding:6px 10px;border-radius:16px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:500;font-variant-numeric:tabular-nums}
+.rate-btn:hover{background:rgba(255,255,255,.08)}
+.rate-btn.active{background:#5dcaa5;color:#0a1628}
+
+.color-mode-selector{display:flex;gap:2px;background:rgba(0,0,0,.3);border-radius:20px;padding:3px}
+.color-mode-btn{background:transparent;border:none;color:rgba(255,255,255,.7);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:500;letter-spacing:.5px;display:flex;align-items:center;gap:6px}
+.color-mode-btn:hover{background:rgba(255,255,255,.08)}
+.color-mode-btn.active{background:#88b8e8;color:#0a1628}
+.color-swatch{display:inline-flex;gap:1px}
+.color-swatch span{width:6px;height:10px;border-radius:1px}
+
+/* シークバー本体 */
+.seek-wrap{position:relative;height:36px;display:flex;align-items:center;cursor:pointer;user-select:none}
+.seek-track{position:relative;width:100%;height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:visible}
+.seek-fill{position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,#5dcaa5 0%,#f9b234 50%,#ed6e6d 100%);border-radius:4px;width:0%;pointer-events:none}
+.seek-thumb{position:absolute;top:50%;width:18px;height:18px;background:#fff;border:3px solid #f9b234;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.4);transition:transform .1s}
+.seek-wrap:hover .seek-thumb{transform:translate(-50%,-50%) scale(1.15)}
+
+/* チャプターマーカー */
+.chapter{position:absolute;top:-2px;width:2px;height:12px;background:rgba(255,255,255,.4);pointer-events:none}
+.chapter-label{position:absolute;top:-22px;font-size:10px;color:rgba(255,255,255,.6);transform:translateX(-50%);white-space:nowrap;letter-spacing:.5px;pointer-events:none}
+
+/* ホバープレビュー */
+.seek-preview{position:absolute;bottom:24px;background:rgba(10,22,40,.95);border:1px solid rgba(255,255,255,.2);padding:6px 10px;border-radius:6px;font-size:11px;color:#fff;font-variant-numeric:tabular-nums;transform:translateX(-50%);pointer-events:none;display:none;white-space:nowrap}
+.seek-preview.visible{display:block}
+
+/* カメラ・速度コントロール */
+.cam-buttons{position:fixed;right:32px;top:80px;display:flex;flex-direction:column;gap:8px;z-index:10}
+.cam-btn{background:rgba(10,22,40,.75);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.8);padding:10px 14px;border-radius:8px;cursor:pointer;font-size:11px;font-family:inherit;letter-spacing:.5px;width:120px;text-align:left;transition:all .15s}
+.cam-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.cam-btn.active{background:#f9b234;color:#1a1a1a;border-color:#f9b234;font-weight:600}
+
+.status-bar{position:fixed;left:50%;top:80px;transform:translateX(-50%);background:rgba(10,22,40,.85);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:30px;padding:8px 24px;font-size:13px;color:rgba(255,255,255,.9);letter-spacing:.5px;z-index:10;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+
+.toggle-panel{position:fixed;left:32px;top:80px;display:flex;gap:8px;z-index:10}
+.toggle-btn{background:rgba(10,22,40,.85);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);color:#fff;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;letter-spacing:.5px}
+.toggle-btn:hover{background:rgba(255,255,255,.1)}
+
+.panel{position:fixed;inset:0;background:rgba(10,22,40,.96);backdrop-filter:blur(20px);z-index:50;padding:60px;overflow-y:auto;display:none;flex-direction:column}
+.panel.visible{display:flex}
+.panel-close{position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.panel-close:hover{background:rgba(255,255,255,.2)}
+.panel-title{font-size:32px;font-weight:600;margin-bottom:8px}
+.panel-subtitle{font-size:14px;color:rgba(255,255,255,.6);letter-spacing:2px;margin-bottom:32px}
+
+.cases-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px;max-width:1400px;margin:0 auto;width:100%}
+.case-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:24px;border-left:4px solid #5dcaa5}
+.case-card.warn{border-left-color:#f9b234}
+.case-speed{font-size:36px;font-weight:700;color:#f9b234;margin-bottom:4px;line-height:1}
+.case-type{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:14px}
+.case-result{display:inline-block;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:16px}
+.case-result.safe{background:rgba(93,202,165,.2);color:#5dcaa5;border:1px solid rgba(93,202,165,.4)}
+.case-result.warn{background:rgba(249,178,52,.2);color:#f9b234;border:1px solid rgba(249,178,52,.4)}
+.case-detail{font-size:13px;color:rgba(255,255,255,.75);line-height:1.7}
+.case-detail strong{color:#fff;font-weight:500}
+
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;max-width:1200px;margin:0 auto 40px;width:100%}
+.stat-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:24px;text-align:center}
+.stat-num{font-size:42px;font-weight:700;color:#f9b234;line-height:1;margin-bottom:8px}
+.stat-label{font-size:12px;color:rgba(255,255,255,.7);letter-spacing:1px}
+
+.adopted-banner{display:flex;align-items:center;justify-content:center;gap:32px;padding:20px 24px;background:rgba(249,178,52,.1);border:1px solid rgba(249,178,52,.3);border-radius:12px;margin-bottom:32px;max-width:1000px;margin-left:auto;margin-right:auto;flex-wrap:wrap}
+.adopted-banner-label{font-size:12px;color:#f9b234;letter-spacing:2px;font-weight:600}
+.adopted-org{font-size:18px;font-weight:600;color:#fff}
+
+.police-quote{max-width:1000px;margin:32px auto;padding:24px 32px;background:rgba(237,110,109,.08);border-left:4px solid #ed6e6d;border-radius:8px;font-size:15px;line-height:1.8;color:rgba(255,255,255,.9)}
+.police-quote .src{display:block;margin-top:8px;font-size:12px;color:rgba(255,255,255,.5);letter-spacing:1px}
+
+.spec-table{max-width:900px;margin:0 auto;width:100%;background:rgba(255,255,255,.04);border-radius:12px;padding:24px;border:1px solid rgba(255,255,255,.1)}
+.spec-row{display:grid;grid-template-columns:200px 1fr 1fr;gap:20px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;align-items:center}
+.spec-row:last-child{border-bottom:none}
+.spec-row .lbl{color:rgba(255,255,255,.6);letter-spacing:1px}
+.spec-row .val{color:#fff;font-weight:500;font-variant-numeric:tabular-nums}
+.spec-row .stat{color:#5dcaa5;font-weight:600}
+
+.section-h{font-size:18px;font-weight:600;color:#f9b234;margin:40px auto 20px;max-width:1400px;width:100%;letter-spacing:1px;padding-bottom:8px;border-bottom:1px solid rgba(249,178,52,.3)}
+
+.loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0a1628;z-index:1000;flex-direction:column;gap:16px;transition:opacity .5s}
+.loader.hidden{opacity:0;pointer-events:none}
+.loader-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.1);border-top-color:#f9b234;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{font-size:13px;color:rgba(255,255,255,.6);letter-spacing:2px}
+
+.kbd-hints{position:fixed;left:32px;bottom:170px;font-size:10px;color:rgba(255,255,255,.4);line-height:1.6;pointer-events:none;display:none}
+@media (min-width:1100px){.kbd-hints{display:block}}
+.kbd-hints kbd{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:9px;border:1px solid rgba(255,255,255,.15)}
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">3Dシーンを構築中...</div>
+</div>
+
+<div id="scene-container"></div>
+
+<div class="hud">
+  <div>
+    <div class="hud-title">ショックプロテクター SP-100<span class="tag-v3">タイムライン版</span></div>
+    <div class="hud-subtitle">SHOCK PROTECTOR · NEXCO/首都高速/阪神高速 採用実績</div>
+  </div>
+  <div class="hud-meta">
+    本装置により尊い人命が救われました<br>
+    開発: NKC開発株式会社<br>
+    研究: 大阪府立産業技術総合研究所
+  </div>
+</div>
+
+<div class="status-bar" id="status">準備完了 — 再生ボタンまたはシークバーを動かしてください</div>
+
+<div class="toggle-panel">
+  <button class="toggle-btn" onclick="showPanel('cases')">📋 事故事例</button>
+  <button class="toggle-btn" onclick="showPanel('specs')">📊 試験成績</button>
+  <div class="color-mode-selector" style="background:rgba(10,22,40,.85);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);padding:5px;margin-left:4px">
+    <button class="color-mode-btn active" data-mode="real" onclick="setColorMode('real')" title="実物の見た目">
+      <span class="color-swatch"><span style="background:#f5c623"></span><span style="background:#1a1a1a"></span><span style="background:#f5c623"></span></span>
+      実物
+    </button>
+    <button class="color-mode-btn" data-mode="edu" onclick="setColorMode('edu')" title="緩衝特性別の色分け">
+      <span class="color-swatch"><span style="background:#5dcaa5"></span><span style="background:#f9b234"></span><span style="background:#ed6e6d"></span></span>
+      解説
+    </button>
+  </div>
+</div>
+
+<div class="gauges">
+  <div class="gauge">
+    <div class="gauge-label">SPEED · 速度</div>
+    <div class="gauge-value-row">
+      <span class="gauge-value" id="speed-val">100</span>
+      <span class="gauge-unit">km/h</span>
+    </div>
+    <div class="gauge-bar-bg"><div class="gauge-bar" id="speed-bar" style="width:100%"></div></div>
+  </div>
+  <div class="gauge">
+    <div class="gauge-label">G-FORCE · 加速度</div>
+    <div class="gauge-value-row">
+      <span class="gauge-value" id="g-val">0.0</span>
+      <span class="gauge-unit">G</span>
+    </div>
+    <div class="gauge-bar-bg"><div class="gauge-bar" id="g-bar" style="width:0%;background:#5dcaa5"></div></div>
+  </div>
+  <div class="gauge">
+    <div class="gauge-label">OIV · 乗員衝突速度</div>
+    <div class="gauge-value-row">
+      <span class="gauge-value" id="oiv-val">0.0</span>
+      <span class="gauge-unit">m/s（基準: 12.2以下）</span>
+    </div>
+    <div class="gauge-bar-bg"><div class="gauge-bar" id="oiv-bar" style="width:0%;background:#5dcaa5"></div></div>
+  </div>
+</div>
+
+<div class="damage-meter">
+  <div class="gauge-label">CRUMPLE · 車両損傷度</div>
+  <div class="gauge-value-row">
+    <span class="damage-value" id="damage-val">0</span>
+    <span class="gauge-unit">%</span>
+  </div>
+  <div class="damage-bar-bg"><div class="damage-bar" id="damage-bar" style="width:0%"></div></div>
+</div>
+
+<div class="cam-buttons">
+  <button class="cam-btn active" data-cam="cinematic" onclick="setCamera('cinematic')">▸ シネマティック</button>
+  <button class="cam-btn" data-cam="closeup" onclick="setCamera('closeup')">クローズアップ</button>
+  <button class="cam-btn" data-cam="side" onclick="setCamera('side')">真横から</button>
+  <button class="cam-btn" data-cam="top" onclick="setCamera('top')">真上から</button>
+  <button class="cam-btn" data-cam="front" onclick="setCamera('front')">正面から</button>
+  <button class="cam-btn" data-cam="free" onclick="setCamera('free')">自由視点</button>
+</div>
+
+<!-- タイムラインエリア -->
+<div class="timeline-area">
+  <div class="timeline-row1">
+    <button class="btn-icon" id="rewind-btn" onclick="rewindToStart()" title="最初に戻る">⏮</button>
+    <button class="btn-icon" onclick="stepBackward()" title="0.1秒戻る">⏪</button>
+    <button class="btn-icon primary" id="play-btn" onclick="togglePlay()" title="再生/一時停止">▶</button>
+    <button class="btn-icon" onclick="stepForward()" title="0.1秒進む">⏩</button>
+    <div class="time-display">
+      <span class="current" id="time-current">0.00s</span>
+      <span class="total"> / <span id="time-total">4.50</span>s</span>
+    </div>
+
+    <div class="playback-rate">
+      <button class="rate-btn" data-rate="0.25" onclick="setRate(0.25)">0.25×</button>
+      <button class="rate-btn" data-rate="0.5" onclick="setRate(0.5)">0.5×</button>
+      <button class="rate-btn active" data-rate="1" onclick="setRate(1)">1×</button>
+      <button class="rate-btn" data-rate="2" onclick="setRate(2)">2×</button>
+    </div>
+
+    <div class="speed-mini-selector">
+      <button class="speed-mini" data-speed="80" onclick="setSpeed(80)">80</button>
+      <button class="speed-mini active" data-speed="100" onclick="setSpeed(100)">100</button>
+      <button class="speed-mini" data-speed="120" onclick="setSpeed(120)">120</button>
+      <button class="speed-mini" data-speed="130" onclick="setSpeed(130)">130</button>
+    </div>
+  </div>
+
+  <div class="seek-wrap" id="seek-wrap">
+    <div class="seek-track" id="seek-track">
+      <div class="seek-fill" id="seek-fill"></div>
+      <div class="seek-thumb" id="seek-thumb"></div>
+      <div class="chapter" style="left:22.2%"><div class="chapter-label" style="left:0">衝突</div></div>
+      <div class="chapter" style="left:38%"><div class="chapter-label" style="left:0">段階1終</div></div>
+      <div class="chapter" style="left:60%"><div class="chapter-label" style="left:0">段階2終</div></div>
+      <div class="chapter" style="left:75.5%"><div class="chapter-label" style="left:0">停止</div></div>
+    </div>
+    <div class="seek-preview" id="seek-preview">0.00s</div>
+  </div>
+</div>
+
+<div class="kbd-hints">
+  <kbd>Space</kbd>再生/停止 <kbd>←</kbd><kbd>→</kbd>0.1秒シーク <kbd>Home</kbd>先頭 <kbd>F</kbd>全画面
+</div>
+
+<!-- 事故事例パネル -->
+<div class="panel" id="panel-cases">
+  <button class="panel-close" onclick="hidePanel('cases')">×</button>
+  <div class="panel-title">実際の事故事例</div>
+  <div class="panel-subtitle">REAL-WORLD CASE STUDIES · NEXCO・首都高速・阪神高速</div>
+  <div class="adopted-banner">
+    <div class="adopted-banner-label">公的高速道路機関で採用</div>
+    <div class="adopted-org">NEXCO</div>
+    <div class="adopted-org">首都高速</div>
+    <div class="adopted-org">阪神高速</div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num">130</div><div class="stat-label">km/h で正面衝突しても<br>無傷の事例あり</div></div>
+    <div class="stat-card"><div class="stat-num">4件</div><div class="stat-label">実事故での<br>人命救助実績</div></div>
+    <div class="stat-card"><div class="stat-num">100%</div><div class="stat-label">死亡事故<br>回避率</div></div>
+    <div class="stat-card"><div class="stat-num">3社</div><div class="stat-label">高速道路<br>運営会社で採用</div></div>
+  </div>
+  <div class="cases-grid">
+    <div class="case-card">
+      <div class="case-speed">130 km/h</div>
+      <div class="case-type">正面衝突 · マツダプレマシー（2,000cc · 1,350kg）</div>
+      <div class="case-result safe">✓ 無傷</div>
+      <div class="case-detail">平成6年5月10日 12時頃発生<br>阪神高速道路<br><strong>SP-100が衝撃を完全吸収。ドライバーは無傷で帰宅。</strong></div>
+    </div>
+    <div class="case-card warn">
+      <div class="case-speed">120 km/h</div>
+      <div class="case-type">正面衝突 · トヨタヴィッツ（2,000cc · 1,700kg）</div>
+      <div class="case-result warn">△ 軽傷のみ</div>
+      <div class="case-detail">平成15年4月11日<br>運転者は手・足に打撲傷で済んだ。<br><strong>※エアバッグ未作動でも生命は守られた</strong></div>
+    </div>
+    <div class="case-card warn">
+      <div class="case-speed">100 km/h</div>
+      <div class="case-type">正面衝突 · 軽ワンボックス（スズキエブリィ）</div>
+      <div class="case-result warn">△ 左足骨折</div>
+      <div class="case-detail">平成14年8月1日 東大阪JCT<br>アコーデオン式に潰れたが、車両重量とブレーキ性能の関係でショックプロテクターを完全に潰し切ったため。<br><strong>骨折はあったが命に別状なし</strong></div>
+    </div>
+    <div class="case-card">
+      <div class="case-speed">130 km/h</div>
+      <div class="case-type">左側面衝突 · トラクタ＋20tトレーラー</div>
+      <div class="case-result safe">✓ 無傷</div>
+      <div class="case-detail">平成14年5月19日 近畿道二色IC<br>大型トラクタ＋20tトレーラーが130km/hで突っ込むも、SP-100が衝撃吸収。<br><strong>大型車両でも完全に対応</strong></div>
+    </div>
+  </div>
+  <div class="police-quote">
+    💬 <strong style="color:#ed6e6d">警察見解：</strong>「ショックプロテクターが無ければ、これらの事故は<strong style="color:#fff">死亡事故になっていた可能性が高い</strong>。」
+    <span class="src">— 首都高速道路公団 技術より</span>
+  </div>
+</div>
+
+<!-- 試験成績パネル -->
+<div class="panel" id="panel-specs">
+  <button class="panel-close" onclick="hidePanel('specs')">×</button>
+  <div class="panel-title">公式試験成績</div>
+  <div class="panel-subtitle">CERTIFIED TEST RESULTS · 大阪府立産業技術総合研究所</div>
+  <div class="section-h">車両衝突試験結果（速度100km/h）</div>
+  <div class="spec-table">
+    <div class="spec-row"><div class="lbl">評価基準</div><div class="val">200 m/s² 以下 / 12.2 m/s 以下</div><div class="val">車内の生存空間の確保</div></div>
+    <div class="spec-row"><div class="lbl">試験結果</div><div class="stat">173.7 m/s² / 12.2 m/s 以下</div><div class="stat">✓ OK（生存空間確保）</div></div>
+  </div>
+  <div class="section-h">緩衝ボックス10個構成</div>
+  <div class="spec-table">
+    <div class="spec-row"><div class="lbl">記号</div><div class="val" style="grid-column:span 2">A1, A2, A3, A4 / B1, B2, B3 / C1, C2, C3</div></div>
+    <div class="spec-row"><div class="lbl">発泡倍率</div><div class="val" style="grid-column:span 2">50, 50, 40, 40 / 50, 50, 40 / 40, 40, 40</div></div>
+    <div class="spec-row"><div class="lbl">高さ・厚さ</div><div class="val" style="grid-column:span 2">800mm × 300mm（全ボックス共通）</div></div>
+    <div class="spec-row"><div class="lbl">支持板</div><div class="val" style="grid-column:span 2">A4-B1間 80kg / B3-C1間 200kg の慣性質量体プレート</div></div>
+  </div>
+  <div class="section-h">研究・開発体制</div>
+  <div class="spec-table">
+    <div class="spec-row"><div class="lbl">研究機関</div><div class="val" style="grid-column:span 2">大阪府立産業技術総合研究所</div></div>
+    <div class="spec-row"><div class="lbl">研究担当</div><div class="val" style="grid-column:span 2">中嶋隆勝（工学博士）</div></div>
+    <div class="spec-row"><div class="lbl">開発元</div><div class="val" style="grid-column:span 2">NKC開発株式会社 開発部 山崎</div></div>
+    <div class="spec-row"><div class="lbl">論文番号</div><div class="val" style="grid-column:span 2">C-51「車両用衝突緩衝装置の開発」</div></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ======== TIMELINE STATE ========
+const TOTAL_DURATION = 4.5;
+const PHASE_APPROACH = 1.0;
+const PHASE_CRUSH = 2.4;
+const PHASE_SETTLE = 1.1;
+
+let scene, camera, renderer, clock;
+let car, carParts = {}, boxes = [], plates = [], wall, ground;
+let smokeSystem, debrisSystem;
+let isPlaying = false;
+let currentTime = 0;        // simulation time in seconds (0 to TOTAL_DURATION)
+let playbackRate = 1.0;
+let cameraMode = 'cinematic';
+let currentSpeed = 100;
+let colorMode = 'real';     // 'real' = 実物カラー（黄黒）, 'edu' = 教育カラー（緑黄赤）
+let mouseControl = { isDown: false, lastX: 0, lastY: 0, theta: 0, phi: 0, distance: 18 };
+let isSeeking = false;
+
+// Particle persistence — particles emitted per frame are non-deterministic,
+// so we suppress them when seeking
+let suppressParticles = false;
+
+const COLORS = {
+  bg: 0x0a1628, car: 0x2c5fa8, carHighlight: 0x4a8de0, carWindow: 0x88b8e8,
+  carDark: 0x1a3a6a, soft: 0x5dcaa5, medium: 0xf9b234, hard: 0xed6e6d,
+  plate: 0x888780, wall: 0x5a5a5a, ground: 0xb8b8b8
+};
+
+window.showPanel = function(name) { document.getElementById('panel-' + name).classList.add('visible'); };
+window.hidePanel = function(name) { document.getElementById('panel-' + name).classList.remove('visible'); };
+
+window.setSpeed = function(s) {
+  currentSpeed = s;
+  document.querySelectorAll('.speed-mini').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.speed) === s);
+  });
+  document.getElementById('speed-val').textContent = s;
+  // Maintain time position when speed changes
+  applyState(currentTime);
+};
+
+window.setRate = function(r) {
+  playbackRate = r;
+  document.querySelectorAll('.rate-btn').forEach(b => {
+    b.classList.toggle('active', parseFloat(b.dataset.rate) === r);
+  });
+};
+
+window.setColorMode = function(mode) {
+  colorMode = mode;
+  document.querySelectorAll('.color-mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  // 全ボックスの色を切り替えて、現在の潰れ状態に応じた表示にする
+  boxes.forEach(box => {
+    const newColor = mode === 'real' ? box.userData.realColor : box.userData.eduColor;
+    box.userData.originalColor = newColor;
+    // isYellow も再判定（教育モードでは色合いが違うため、暗化処理の対象を変える）
+    // 教育モードでは全色暗化、実物モードでは黄色のみ暗化
+  });
+  // 現在の状態を再描画
+  applyState(currentTime);
+};
+
+window.togglePlay = function() {
+  if (isPlaying) {
+    pause();
+  } else {
+    if (currentTime >= TOTAL_DURATION) {
+      currentTime = 0;
+    }
+    play();
+  }
+};
+
+window.rewindToStart = function() {
+  pause();
+  currentTime = 0;
+  applyState(0);
+  updateTimelineUI();
+};
+
+window.stepBackward = function() {
+  pause();
+  currentTime = Math.max(0, currentTime - 0.1);
+  applyState(currentTime);
+  updateTimelineUI();
+};
+
+window.stepForward = function() {
+  pause();
+  currentTime = Math.min(TOTAL_DURATION, currentTime + 0.1);
+  applyState(currentTime);
+  updateTimelineUI();
+};
+
+function play() {
+  isPlaying = true;
+  document.getElementById('play-btn').textContent = '⏸';
+  document.getElementById('play-btn').title = '一時停止';
+}
+
+function pause() {
+  isPlaying = false;
+  document.getElementById('play-btn').textContent = '▶';
+  document.getElementById('play-btn').title = '再生';
+}
+
+function init() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(COLORS.bg);
+  scene.fog = new THREE.Fog(COLORS.bg, 25, 80);
+
+  const container = document.getElementById('scene-container');
+  const w = window.innerWidth, h = window.innerHeight;
+
+  camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 200);
+  setCameraPosition('cinematic');
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0x6080a0, 0.5));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  keyLight.position.set(8, 12, 6);
+  keyLight.castShadow = true;
+  keyLight.shadow.camera.left = -15;
+  keyLight.shadow.camera.right = 15;
+  keyLight.shadow.camera.top = 10;
+  keyLight.shadow.camera.bottom = -5;
+  keyLight.shadow.camera.far = 30;
+  keyLight.shadow.mapSize.width = 2048;
+  keyLight.shadow.mapSize.height = 2048;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0x88aaff, 0.4);
+  fillLight.position.set(-8, 4, -3);
+  scene.add(fillLight);
+
+  const accentLight = new THREE.PointLight(0xf9b234, 0.6, 20);
+  accentLight.position.set(2, 3, 0);
+  scene.add(accentLight);
+
+  const groundGeo = new THREE.PlaneGeometry(60, 30);
+  const groundMat = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.85, metalness: 0.05 });
+  ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  const grid = new THREE.GridHelper(60, 30, 0x888888, 0xa0a0a0);
+  grid.position.y = 0.01;
+  scene.add(grid);
+
+  buildScene();
+  setupMouseControl();
+  setupKeyboard();
+  setupSeekBar();
+
+  // Apply initial state
+  applyState(0);
+  updateTimelineUI();
+
+  setTimeout(() => { document.getElementById('loader').classList.add('hidden'); }, 600);
+  clock = new THREE.Clock();
+  animate();
+}
+
+function buildScene() {
+  buildCar();
+  buildBoxes();
+  buildWall();
+  buildSmokeSystem();
+  buildDebrisSystem();
+}
+
+function buildCar() {
+  const group = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({ color: COLORS.car, roughness: 0.4, metalness: 0.6 });
+  const cabinMat = new THREE.MeshStandardMaterial({ color: COLORS.carHighlight, roughness: 0.3, metalness: 0.7 });
+
+  const bodyGeo = new THREE.BoxGeometry(2.4, 0.7, 1.2, 12, 4, 4);
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = 0.55;
+  body.castShadow = true;
+  body.userData.originalPositions = body.geometry.attributes.position.array.slice();
+  group.add(body);
+  carParts.body = body;
+
+  const hoodGeo = new THREE.BoxGeometry(0.9, 0.45, 1.15, 8, 3, 3);
+  const hood = new THREE.Mesh(hoodGeo, bodyMat);
+  hood.position.set(0.85, 0.62, 0);
+  hood.castShadow = true;
+  hood.userData.originalPositions = hood.geometry.attributes.position.array.slice();
+  group.add(hood);
+  carParts.hood = hood;
+
+  const bumperGeo = new THREE.BoxGeometry(0.2, 0.35, 1.1, 4, 3, 3);
+  const bumperMat = new THREE.MeshStandardMaterial({ color: COLORS.carDark, roughness: 0.5, metalness: 0.5 });
+  const bumper = new THREE.Mesh(bumperGeo, bumperMat);
+  bumper.position.set(1.32, 0.45, 0);
+  bumper.castShadow = true;
+  bumper.userData.originalPositions = bumper.geometry.attributes.position.array.slice();
+  group.add(bumper);
+  carParts.bumper = bumper;
+
+  const cabinGeo = new THREE.BoxGeometry(1.4, 0.55, 1.1, 4, 3, 3);
+  const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+  cabin.position.set(-0.3, 1.15, 0);
+  cabin.castShadow = true;
+  group.add(cabin);
+
+  const winGeo = new THREE.BoxGeometry(0.05, 0.4, 1.05);
+  const winMat = new THREE.MeshStandardMaterial({ color: COLORS.carWindow, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.7 });
+  const winFront = new THREE.Mesh(winGeo, winMat);
+  winFront.position.set(0.42, 1.15, 0);
+  group.add(winFront);
+  const winBack = new THREE.Mesh(winGeo, winMat);
+  winBack.position.set(-1.0, 1.15, 0);
+  group.add(winBack);
+
+  const wheelGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.2, 16);
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+  const wheelPositions = [[0.8, 0.32, 0.6], [0.8, 0.32, -0.6], [-0.8, 0.32, 0.6], [-0.8, 0.32, -0.6]];
+  carParts.wheels = [];
+  wheelPositions.forEach(p => {
+    const w = new THREE.Mesh(wheelGeo, wheelMat);
+    w.position.set(...p);
+    w.rotation.x = Math.PI / 2;
+    w.castShadow = true;
+    group.add(w);
+    carParts.wheels.push(w);
+  });
+
+  const lightGeo = new THREE.SphereGeometry(0.12, 12, 12);
+  const lightMat = new THREE.MeshStandardMaterial({ color: 0xffffaa, emissive: 0xffff66, emissiveIntensity: 1.5 });
+  const hl1 = new THREE.Mesh(lightGeo, lightMat);
+  hl1.position.set(1.25, 0.7, 0.4);
+  group.add(hl1);
+  carParts.hl1 = hl1;
+  const hl2 = new THREE.Mesh(lightGeo, lightMat);
+  hl2.position.set(1.25, 0.7, -0.4);
+  group.add(hl2);
+  carParts.hl2 = hl2;
+
+  group.position.set(-12, 0, 0);
+  car = group;
+  scene.add(car);
+}
+
+function deformPart(mesh, amount, opts) {
+  if (!mesh.userData.originalPositions) return;
+  const positions = mesh.geometry.attributes.position.array;
+  const original = mesh.userData.originalPositions;
+  const seed = opts.seed || 0;
+  let maxX = -Infinity, minX = Infinity;
+  for (let i = 0; i < original.length; i += 3) {
+    if (original[i] > maxX) maxX = original[i];
+    if (original[i] < minX) minX = original[i];
+  }
+  const range = maxX - minX;
+  for (let i = 0; i < positions.length; i += 3) {
+    const ox = original[i], oy = original[i + 1], oz = original[i + 2];
+    const frontInfluence = (ox - minX) / range;
+    if (opts.frontOnly && frontInfluence < 0.5) {
+      positions[i] = ox; positions[i + 1] = oy; positions[i + 2] = oz;
+      continue;
+    }
+    const compressFactor = (opts.compressX || 0) * amount * frontInfluence;
+    let newX = ox - compressFactor * range * 0.5;
+    const noiseAmount = (opts.crumpleNoise || 0) * amount * frontInfluence;
+    const noiseX = pseudoRandom(ox * 7 + seed) * noiseAmount;
+    const noiseY = pseudoRandom(oy * 11 + seed * 3) * noiseAmount;
+    const noiseZ = pseudoRandom(oz * 13 + seed * 5) * noiseAmount;
+    let newY = oy + noiseY, newZ = oz + noiseZ;
+    newX += noiseX;
+    if (opts.bendUp && frontInfluence > 0.3) {
+      newY += opts.bendUp * amount * frontInfluence * frontInfluence;
+    }
+    positions[i] = newX; positions[i + 1] = newY; positions[i + 2] = newZ;
+  }
+  mesh.geometry.attributes.position.needsUpdate = true;
+  mesh.geometry.computeVertexNormals();
+}
+
+function deformCar(damageAmount, time) {
+  if (damageAmount <= 0) {
+    // Full reset
+    ['body', 'hood', 'bumper'].forEach(name => {
+      const part = carParts[name];
+      const positions = part.geometry.attributes.position.array;
+      const original = part.userData.originalPositions;
+      for (let i = 0; i < positions.length; i++) positions[i] = original[i];
+      part.geometry.attributes.position.needsUpdate = true;
+      part.geometry.computeVertexNormals();
+    });
+    carParts.hl1.position.set(1.25, 0.7, 0.4);
+    carParts.hl2.position.set(1.25, 0.7, -0.4);
+    carParts.hl1.material.emissiveIntensity = 1.5;
+    carParts.hl2.material.emissiveIntensity = 1.5;
+    return;
+  }
+  deformPart(carParts.bumper, damageAmount, { compressX: 0.65, crumpleNoise: 0.06, seed: 1 });
+  deformPart(carParts.hood, damageAmount * 0.85, { compressX: 0.45, crumpleNoise: 0.05, bendUp: 0.15, seed: 2 });
+  deformPart(carParts.body, damageAmount * 0.4, { compressX: 0.2, crumpleNoise: 0.025, frontOnly: true, seed: 3 });
+  carParts.hl1.position.x = 1.25 - damageAmount * 0.4;
+  carParts.hl2.position.x = 1.25 - damageAmount * 0.4;
+  carParts.hl1.position.y = 0.7 - damageAmount * 0.05;
+  carParts.hl2.position.y = 0.7 - damageAmount * 0.05;
+  // Deterministic flicker based on time (so seeking gives consistent visual)
+  if (damageAmount > 0.5) {
+    const flickerPhase = Math.sin(time * 30) > 0.6;
+    const flicker = flickerPhase ? 0.3 : 1.5;
+    carParts.hl1.material.emissiveIntensity = flicker;
+    carParts.hl2.material.emissiveIntensity = flicker;
+  }
+}
+
+function pseudoRandom(seed) {
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return (x - Math.floor(x)) - 0.5;
+}
+
+// 実物のショックプロテクターSP-100：弾丸型・黄黒シマウマパターン・高さ約800mm（腰高）
+// 車（高さ1.7m相当）より小さく、横に細長い形状
+function buildBoxes() {
+  // 10個に内部分割した弾丸型筐体として再現
+  // 全長3m, 幅0.9m, 高さ0.8m（仕様書通り）
+  // ただし車が小さい（全長2.4m）なので相対比率を実物寄りに調整
+  const segments = [
+    { label: 'A1', t: 'soft' }, { label: 'A2', t: 'soft' },
+    { label: 'A3', t: 'medium' }, { label: 'A4', t: 'medium' },
+    { label: 'B1', t: 'soft' }, { label: 'B2', t: 'soft' },
+    { label: 'B3', t: 'medium' }, { label: 'C1', t: 'medium' },
+    { label: 'C2', t: 'hard' }, { label: 'C3', t: 'hard' }
+  ];
+  const totalLength = 3.0;        // 全長3m
+  const segWidth = totalLength / segments.length; // 0.3m per segment
+  const protectorHeight = 0.8;    // 高さ800mm（仕様書通り）
+  const protectorDepth = 0.9;     // 幅900mm
+  const startX = -0.3;            // 車（先端1.32付近）からの距離を縮める
+  const baseY = 0.05;             // 基台分
+
+  // 黄黒シマウマカラー（実物に合わせる）
+  const COLOR_YELLOW = 0xf5c623;
+  const COLOR_BLACK = 0x1a1a1a;
+
+  // 教育モードの色マップ（緩衝特性別）
+  const EDU_COLORS = {
+    soft: COLORS.soft,      // 緑：柔らかい
+    medium: COLORS.medium,  // 黄：中くらい
+    hard: COLORS.hard       // 赤：硬い
+  };
+
+  segments.forEach((cfg, i) => {
+    // 弾丸型のため、先頭は半円・後端はテーパー
+    let xScale = 1.0;
+    const isFront = i === 0;
+    const isBack = i === segments.length - 1;
+
+    // 高さプロファイル（先端は丸く、後端は細く）
+    let segH = protectorHeight;
+    let segD = protectorDepth;
+    if (isFront) {
+      // 先端：半円形に近づける
+      segH = protectorHeight * 0.95;
+      segD = protectorDepth * 0.85;
+    } else if (isBack) {
+      // 後端：テーパー
+      segH = protectorHeight * 0.7;
+      segD = protectorDepth * 0.6;
+    } else if (i === segments.length - 2) {
+      // 後ろから2番目：少しテーパー始まり
+      segH = protectorHeight * 0.85;
+      segD = protectorDepth * 0.8;
+    }
+
+    const geo = new THREE.BoxGeometry(segWidth, segH, segD, 4, 6, 4);
+
+    // 先端だけ丸める（半円形ノーズ）
+    if (isFront) {
+      const positions = geo.attributes.position.array;
+      for (let v = 0; v < positions.length; v += 3) {
+        const px = positions[v];
+        const py = positions[v + 1];
+        const pz = positions[v + 2];
+        // X座標がマイナス側（先端）の頂点を丸める
+        if (px < -segWidth * 0.3) {
+          const yNorm = py / (segH / 2); // -1 to 1
+          const zNorm = pz / (segD / 2); // -1 to 1
+          const radial = Math.sqrt(yNorm * yNorm + zNorm * zNorm);
+          if (radial > 0.01) {
+            // 球状に変形
+            const xFactor = (px + segWidth / 2) / segWidth; // 0 at front, 1 at back
+            const sphereFactor = 1 - xFactor; // 1 at front
+            const shrink = 1 - sphereFactor * 0.3 * radial;
+            positions[v + 1] = py * shrink;
+            positions[v + 2] = pz * shrink;
+            positions[v] = px - sphereFactor * (1 - 1 / Math.max(radial, 0.5)) * 0.05;
+          }
+        }
+      }
+      geo.computeVertexNormals();
+    }
+
+    // 黄色か黒か交互（シマウマパターン）
+    const isYellow = i % 2 === 0;
+    const realColor = isYellow ? COLOR_YELLOW : COLOR_BLACK;
+    const eduColor = EDU_COLORS[cfg.t];
+
+    // 初期は実物カラー（モード切替で変わる）
+    const initialColor = realColor;
+    const mat = new THREE.MeshStandardMaterial({
+      color: initialColor,
+      roughness: 0.6,
+      metalness: 0.1
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    const x = startX + i * segWidth + segWidth / 2;
+    mesh.position.set(x, baseY + segH / 2, 0);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    mesh.userData = {
+      label: cfg.label, originalX: x,
+      originalColor: initialColor,    // 現在のモードの基本色
+      realColor: realColor,           // 実物モード用
+      eduColor: eduColor,             // 教育モード用
+      crushAmount: 0, index: i,
+      originalPositions: mesh.geometry.attributes.position.array.slice(),
+      seed: i * 17 + 5,
+      type: cfg.t,
+      isYellow: isYellow
+    };
+    boxes.push(mesh);
+    scene.add(mesh);
+  });
+
+  // ベース（基台）— グレーの台座
+  const baseLength = totalLength + 0.2;
+  const baseGeo = new THREE.BoxGeometry(baseLength, 0.1, protectorDepth + 0.15);
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, roughness: 0.7, metalness: 0.4 });
+  const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+  baseMesh.position.set(startX + totalLength / 2, 0.05, 0);
+  baseMesh.castShadow = true;
+  baseMesh.receiveShadow = true;
+  scene.add(baseMesh);
+}
+
+function crushBox(mesh, amount) {
+  const positions = mesh.geometry.attributes.position.array;
+  const original = mesh.userData.originalPositions;
+  if (amount <= 0.001) {
+    for (let i = 0; i < positions.length; i++) positions[i] = original[i];
+    mesh.geometry.attributes.position.needsUpdate = true;
+    mesh.geometry.computeVertexNormals();
+    mesh.material.color = new THREE.Color(mesh.userData.originalColor);
+    return;
+  }
+  const seed = mesh.userData.seed;
+  let minLocalX = Infinity, maxLocalX = -Infinity;
+  for (let i = 0; i < original.length; i += 3) {
+    if (original[i] < minLocalX) minLocalX = original[i];
+    if (original[i] > maxLocalX) maxLocalX = original[i];
+  }
+  const xRange = maxLocalX - minLocalX;
+  for (let i = 0; i < positions.length; i += 3) {
+    const ox = original[i], oy = original[i + 1], oz = original[i + 2];
+    const impactInf = (ox - minLocalX) / xRange;
+    const impactSide = 1 - impactInf;
+    const compress = amount * (0.3 + impactSide * 0.7);
+    let newX = ox + compress * xRange * 0.55;
+    const noise = amount * 0.08 * impactSide;
+    const nx = pseudoRandom(ox * 7 + oy * 3 + seed) * noise;
+    const ny = pseudoRandom(oy * 5 + oz * 2 + seed * 2) * noise;
+    const nz = pseudoRandom(oz * 6 + ox * 4 + seed * 3) * noise;
+    const bulgeAmount = amount * 0.15 * impactSide;
+    const yDir = oy / (Math.abs(oy) + 0.01);
+    const zDir = oz / (Math.abs(oz) + 0.01);
+    const bulgeY = yDir * Math.abs(oy) * bulgeAmount;
+    const bulgeZ = zDir * Math.abs(oz) * bulgeAmount;
+    positions[i] = newX + nx;
+    positions[i + 1] = oy + bulgeY + ny;
+    positions[i + 2] = oz + bulgeZ + nz;
+  }
+  mesh.geometry.attributes.position.needsUpdate = true;
+  mesh.geometry.computeVertexNormals();
+  // 教育モードは全色を暗化、実物モードは黄色のみ暗化（黒は変化なし）
+  const shouldDarken = colorMode === 'edu' || mesh.userData.isYellow;
+  if (shouldDarken) {
+    const darkenFactor = 1 - amount * 0.35;
+    const c = new THREE.Color(mesh.userData.originalColor);
+    c.multiplyScalar(darkenFactor);
+    mesh.material.color = c;
+  } else {
+    // 実物モードの黒部分は色変化なし
+    mesh.material.color = new THREE.Color(mesh.userData.originalColor);
+  }
+}
+
+function buildPlate(x, thickness) {
+  const geo = new THREE.BoxGeometry(thickness, 1.7, 1.55);
+  const mat = new THREE.MeshStandardMaterial({ color: COLORS.plate, roughness: 0.3, metalness: 0.8 });
+  const plate = new THREE.Mesh(geo, mat);
+  plate.position.set(x, 0.85, 0);
+  plate.castShadow = true;
+  plates.push(plate);
+  scene.add(plate);
+}
+
+function buildWall() {
+  const lastBox = boxes[boxes.length - 1];
+  const wallX = lastBox.position.x + 0.3;
+  const geo = new THREE.BoxGeometry(0.6, 3, 4);
+  const mat = new THREE.MeshStandardMaterial({ color: COLORS.wall, roughness: 0.5, metalness: 0.4 });
+  wall = new THREE.Mesh(geo, mat);
+  wall.position.set(wallX, 1.5, 0);
+  wall.castShadow = true;
+  wall.receiveShadow = true;
+  scene.add(wall);
+}
+
+function buildSmokeSystem() {
+  const count = 150;
+  const geo = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const velocities = [], lives = [], colors = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i * 3 + 1] = -100;
+    velocities.push({ x: 0, y: 0, z: 0 });
+    lives.push(0);
+    colors[i * 3] = 1; colors[i * 3 + 1] = 1; colors[i * 3 + 2] = 1;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const mat = new THREE.PointsMaterial({ size: 0.6, transparent: true, opacity: 0.5, vertexColors: true, sizeAttenuation: true, depthWrite: false });
+  smokeSystem = new THREE.Points(geo, mat);
+  smokeSystem.userData = { velocities, lives };
+  scene.add(smokeSystem);
+}
+
+function buildDebrisSystem() {
+  const count = 100;
+  const geo = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const velocities = [], lives = [], colors = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i * 3 + 1] = -100;
+    velocities.push({ x: 0, y: 0, z: 0 });
+    lives.push(0);
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const mat = new THREE.PointsMaterial({ size: 0.1, transparent: true, opacity: 0.95, vertexColors: true, sizeAttenuation: true });
+  debrisSystem = new THREE.Points(geo, mat);
+  debrisSystem.userData = { velocities, lives };
+  scene.add(debrisSystem);
+}
+
+function emitSmoke(x, y, z, count) {
+  if (suppressParticles) return;
+  const positions = smokeSystem.geometry.attributes.position.array;
+  const colors = smokeSystem.geometry.attributes.color.array;
+  const velocities = smokeSystem.userData.velocities;
+  const lives = smokeSystem.userData.lives;
+  let emitted = 0;
+  for (let i = 0; i < lives.length && emitted < count; i++) {
+    if (lives[i] <= 0) {
+      positions[i * 3] = x + (Math.random() - 0.5) * 0.5;
+      positions[i * 3 + 1] = y + (Math.random() - 0.5) * 0.3;
+      positions[i * 3 + 2] = z + (Math.random() - 0.5) * 0.5;
+      velocities[i].x = (Math.random() - 0.5) * 1.5;
+      velocities[i].y = Math.random() * 1.5 + 0.5;
+      velocities[i].z = (Math.random() - 0.5) * 1.5;
+      lives[i] = 1.5;
+      const shade = 0.6 + Math.random() * 0.4;
+      colors[i * 3] = shade; colors[i * 3 + 1] = shade; colors[i * 3 + 2] = shade;
+      emitted++;
+    }
+  }
+  smokeSystem.geometry.attributes.position.needsUpdate = true;
+  smokeSystem.geometry.attributes.color.needsUpdate = true;
+}
+
+function emitDebris(x, y, z, count, color) {
+  if (suppressParticles) return;
+  const positions = debrisSystem.geometry.attributes.position.array;
+  const colors = debrisSystem.geometry.attributes.color.array;
+  const velocities = debrisSystem.userData.velocities;
+  const lives = debrisSystem.userData.lives;
+  const c = new THREE.Color(color);
+  let emitted = 0;
+  for (let i = 0; i < lives.length && emitted < count; i++) {
+    if (lives[i] <= 0) {
+      positions[i * 3] = x + (Math.random() - 0.5) * 0.3;
+      positions[i * 3 + 1] = y + (Math.random() - 0.5) * 0.3;
+      positions[i * 3 + 2] = z + (Math.random() - 0.5) * 0.3;
+      velocities[i].x = (Math.random() - 0.3) * 5;
+      velocities[i].y = Math.random() * 5 + 1;
+      velocities[i].z = (Math.random() - 0.5) * 5;
+      lives[i] = 1.0;
+      colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
+      emitted++;
+    }
+  }
+  debrisSystem.geometry.attributes.position.needsUpdate = true;
+  debrisSystem.geometry.attributes.color.needsUpdate = true;
+}
+
+function clearAllParticles() {
+  [smokeSystem, debrisSystem].forEach(sys => {
+    const lives = sys.userData.lives;
+    const positions = sys.geometry.attributes.position.array;
+    for (let i = 0; i < lives.length; i++) {
+      lives[i] = 0;
+      positions[i * 3 + 1] = -100;
+    }
+    sys.geometry.attributes.position.needsUpdate = true;
+  });
+}
+
+function updateParticles(dt) {
+  let positions = smokeSystem.geometry.attributes.position.array;
+  let velocities = smokeSystem.userData.velocities;
+  let lives = smokeSystem.userData.lives;
+  for (let i = 0; i < lives.length; i++) {
+    if (lives[i] > 0) {
+      positions[i * 3] += velocities[i].x * dt;
+      positions[i * 3 + 1] += velocities[i].y * dt;
+      positions[i * 3 + 2] += velocities[i].z * dt;
+      velocities[i].y += 0.2 * dt;
+      velocities[i].x *= 0.96;
+      velocities[i].z *= 0.96;
+      lives[i] -= dt * 0.5;
+      if (lives[i] <= 0) positions[i * 3 + 1] = -100;
+    }
+  }
+  smokeSystem.geometry.attributes.position.needsUpdate = true;
+
+  positions = debrisSystem.geometry.attributes.position.array;
+  velocities = debrisSystem.userData.velocities;
+  lives = debrisSystem.userData.lives;
+  for (let i = 0; i < lives.length; i++) {
+    if (lives[i] > 0) {
+      positions[i * 3] += velocities[i].x * dt;
+      positions[i * 3 + 1] += velocities[i].y * dt;
+      positions[i * 3 + 2] += velocities[i].z * dt;
+      velocities[i].y -= 9.8 * dt;
+      lives[i] -= dt * 0.7;
+      if (positions[i * 3 + 1] < 0.05) {
+        positions[i * 3 + 1] = 0.05;
+        velocities[i].y *= -0.4;
+        velocities[i].x *= 0.7;
+        velocities[i].z *= 0.7;
+      }
+      if (lives[i] <= 0) {
+        positions[i * 3 + 1] = -100;
+        lives[i] = 0;
+      }
+    }
+  }
+  debrisSystem.geometry.attributes.position.needsUpdate = true;
+}
+
+// ======== DETERMINISTIC STATE — given time, compute everything ========
+function computeStateAtTime(t) {
+  const gFactor = currentSpeed / 100;
+  const peakG = currentSpeed === 80 ? 19.2 : currentSpeed === 100 ? 17.7 : 17.7 * Math.sqrt(gFactor);
+  const peakOIV = 12.2 * gFactor;
+
+  let speed, gForce, oiv, carX, boxCrush, carDamage, phase, statusText;
+
+  if (t < PHASE_APPROACH) {
+    const p = t / PHASE_APPROACH;
+    speed = currentSpeed;
+    gForce = 0;
+    oiv = 0;
+    carX = -12 + (-1.7 - (-12)) * p;
+    boxCrush = 0;
+    carDamage = 0;
+    phase = 'approach';
+    statusText = '車が時速' + currentSpeed + 'kmで近づいています...';
+  } else if (t < PHASE_APPROACH + PHASE_CRUSH) {
+    const p = (t - PHASE_APPROACH) / PHASE_CRUSH;
+    const easeOut = 1 - Math.pow(1 - p, 2);
+    speed = currentSpeed * (1 - easeOut);
+    // Deterministic G — no noise (or use pseudoRandom based on t for stable noise)
+    const baseG = Math.sin(p * Math.PI) * peakG;
+    const detNoise = pseudoRandom(t * 100) * 1.5;
+    gForce = Math.max(0, baseG + detNoise);
+    oiv = peakOIV * (1 - Math.cos(p * Math.PI)) / 2;
+    boxCrush = easeOut;
+    carX = -1.7 + boxCrush * 2.0;
+    carDamage = Math.min(1, easeOut * (currentSpeed >= 120 ? 1.3 : 1.1));
+    phase = 'crush';
+    if (p < 0.3) statusText = '【段階1】先端の柔らかい部分が潰れ始めました';
+    else if (p < 0.7) statusText = '【段階2】中央部で本格減速中';
+    else statusText = '【段階3】後端の硬い部分が最終的に受け止め — ' + gForce.toFixed(1) + 'G / OIV ' + oiv.toFixed(1) + 'm/s';
+  } else if (t < TOTAL_DURATION) {
+    const p = (t - PHASE_APPROACH - PHASE_CRUSH) / PHASE_SETTLE;
+    speed = 0;
+    gForce = Math.max(0, 5 * (1 - p));
+    oiv = peakOIV;
+    boxCrush = 1;
+    carX = 0.3;
+    carDamage = currentSpeed >= 120 ? 1 : Math.min(1, currentSpeed / 120);
+    phase = 'settle';
+    statusText = currentSpeed === 80 ? '✓ 完全停止 — 乗員無傷' :
+                 currentSpeed === 100 ? '✓ 停止完了 — 乗員生存空間確保（OIV基準達成）' :
+                 currentSpeed === 120 ? '✓ 停止完了 — 軽傷で生存（実事故事例: ヴィッツ無事）' :
+                 '✓ 停止完了 — 130km/h実事故で無傷の実績あり';
+  } else {
+    speed = 0; gForce = 0; oiv = peakOIV; carX = 0.3; boxCrush = 1;
+    carDamage = currentSpeed >= 120 ? 1 : Math.min(1, currentSpeed / 120);
+    phase = 'end';
+    statusText = '再生終了';
+  }
+
+  return { speed, gForce, oiv, carX, boxCrush, carDamage, phase, statusText };
+}
+
+function applyState(t) {
+  const s = computeStateAtTime(t);
+
+  // Car position
+  car.position.x = s.carX;
+  // Deterministic shake in crush phase
+  if (s.phase === 'crush' && s.carDamage > 0) {
+    car.position.y = (pseudoRandom(t * 80) + 0.5) * 0.06 * s.carDamage;
+    car.rotation.z = pseudoRandom(t * 60) * 0.03 * s.carDamage;
+  } else {
+    car.position.y = 0;
+    car.rotation.z = 0;
+  }
+
+  // Wheel rotation — based on integrated travel
+  const wheelAngle = -t * currentSpeed * 0.3 * (s.speed > 0 ? 1 : 1);
+  carParts.wheels.forEach(w => { w.rotation.y = wheelAngle; });
+
+  // Boxes
+  boxes.forEach((box, i) => {
+    const crushThreshold = i / 10;
+    const localCrush = Math.max(0, Math.min(1, (s.boxCrush - crushThreshold) * 3));
+    box.userData.crushAmount = localCrush;
+    crushBox(box, localCrush);
+  });
+
+  // Car deformation
+  deformCar(s.carDamage, t);
+
+  // HUD
+  document.getElementById('speed-val').textContent = Math.round(s.speed);
+  document.getElementById('speed-bar').style.width = (s.speed / currentSpeed * 100) + '%';
+  document.getElementById('speed-bar').style.background = s.speed > 40 ? '#378ADD' : s.speed > 10 ? '#f9b234' : '#5F5E5A';
+  document.getElementById('g-val').textContent = s.gForce.toFixed(1);
+  document.getElementById('g-bar').style.width = Math.min(100, s.gForce / 25 * 100) + '%';
+  document.getElementById('g-bar').style.background = s.gForce < 10 ? '#5dcaa5' : s.gForce < 18 ? '#f9b234' : '#ed6e6d';
+  document.getElementById('oiv-val').textContent = s.oiv.toFixed(1);
+  document.getElementById('oiv-bar').style.width = Math.min(100, s.oiv / 15 * 100) + '%';
+  document.getElementById('oiv-bar').style.background = s.oiv < 10 ? '#5dcaa5' : s.oiv < 12.2 ? '#f9b234' : '#ed6e6d';
+  const damagePct = Math.round(s.carDamage * 100);
+  document.getElementById('damage-val').textContent = damagePct;
+  document.getElementById('damage-bar').style.width = damagePct + '%';
+  document.getElementById('damage-bar').style.background = damagePct < 30 ? '#5dcaa5' : damagePct < 70 ? '#f9b234' : '#ed6e6d';
+  document.getElementById('status').textContent = s.statusText;
+
+  return s;
+}
+
+function updateTimelineUI() {
+  const pct = (currentTime / TOTAL_DURATION * 100);
+  document.getElementById('seek-fill').style.width = pct + '%';
+  document.getElementById('seek-thumb').style.left = pct + '%';
+  document.getElementById('time-current').textContent = currentTime.toFixed(2) + 's';
+  document.getElementById('time-total').textContent = TOTAL_DURATION.toFixed(2);
+}
+
+// ======== SEEK BAR ========
+function setupSeekBar() {
+  const wrap = document.getElementById('seek-wrap');
+  const preview = document.getElementById('seek-preview');
+
+  function getTimeFromEvent(e) {
+    const rect = wrap.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const pct = Math.max(0, Math.min(1, x / rect.width));
+    return pct * TOTAL_DURATION;
+  }
+
+  function startSeek(e) {
+    isSeeking = true;
+    suppressParticles = true;
+    pause();
+    seekTo(getTimeFromEvent(e));
+    e.preventDefault();
+  }
+
+  function moveSeek(e) {
+    if (isSeeking) {
+      seekTo(getTimeFromEvent(e));
+      e.preventDefault();
+    }
+    // Hover preview
+    if (!isSeeking && (e.touches === undefined)) {
+      const rect = wrap.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pct = Math.max(0, Math.min(1, x / rect.width));
+      const t = pct * TOTAL_DURATION;
+      preview.textContent = t.toFixed(2) + 's';
+      preview.style.left = (pct * 100) + '%';
+      preview.classList.add('visible');
+    }
+  }
+
+  function endSeek() {
+    if (isSeeking) {
+      isSeeking = false;
+      // Re-enable particles after a brief pause to let them stabilize
+      setTimeout(() => { suppressParticles = false; }, 100);
+    }
+  }
+
+  function seekTo(t) {
+    currentTime = t;
+    clearAllParticles();
+    applyState(currentTime);
+    updateTimelineUI();
+  }
+
+  wrap.addEventListener('mousedown', startSeek);
+  document.addEventListener('mousemove', moveSeek);
+  document.addEventListener('mouseup', endSeek);
+  wrap.addEventListener('mouseleave', () => preview.classList.remove('visible'));
+
+  wrap.addEventListener('touchstart', startSeek, { passive: false });
+  document.addEventListener('touchmove', moveSeek, { passive: false });
+  document.addEventListener('touchend', endSeek);
+}
+
+// ======== CAMERA ========
+function setCameraPosition(mode) {
+  cameraMode = mode;
+  document.querySelectorAll('.cam-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cam === mode);
+  });
+  if (mode === 'cinematic') { camera.position.set(-5, 2.5, 6); camera.lookAt(0.5, 0.5, 0); }
+  else if (mode === 'closeup') { camera.position.set(-1.5, 1.2, 2.5); camera.lookAt(-0.5, 0.5, 0); }
+  else if (mode === 'side') { camera.position.set(0, 1.2, 7); camera.lookAt(0, 0.7, 0); }
+  else if (mode === 'top') { camera.position.set(0, 12, 0.1); camera.lookAt(0, 0, 0); }
+  else if (mode === 'front') { camera.position.set(-10, 1.2, 1.5); camera.lookAt(0.5, 0.5, 0); }
+  else if (mode === 'free') {
+    mouseControl.theta = Math.atan2(camera.position.z, camera.position.x);
+    mouseControl.phi = Math.acos(camera.position.y / camera.position.length());
+    mouseControl.distance = camera.position.length();
+  }
+}
+window.setCamera = setCameraPosition;
+
+function setupMouseControl() {
+  const canvas = renderer.domElement;
+  canvas.addEventListener('mousedown', e => {
+    if (cameraMode !== 'free') return;
+    mouseControl.isDown = true;
+    mouseControl.lastX = e.clientX;
+    mouseControl.lastY = e.clientY;
+  });
+  canvas.addEventListener('mouseup', () => mouseControl.isDown = false);
+  canvas.addEventListener('mouseleave', () => mouseControl.isDown = false);
+  canvas.addEventListener('mousemove', e => {
+    if (!mouseControl.isDown || cameraMode !== 'free') return;
+    const dx = e.clientX - mouseControl.lastX;
+    const dy = e.clientY - mouseControl.lastY;
+    mouseControl.theta -= dx * 0.01;
+    mouseControl.phi = Math.max(0.1, Math.min(Math.PI - 0.1, mouseControl.phi - dy * 0.01));
+    mouseControl.lastX = e.clientX;
+    mouseControl.lastY = e.clientY;
+    updateFreeCamera();
+  });
+  canvas.addEventListener('wheel', e => {
+    if (cameraMode !== 'free') return;
+    e.preventDefault();
+    mouseControl.distance = Math.max(5, Math.min(40, mouseControl.distance + e.deltaY * 0.02));
+    updateFreeCamera();
+  }, { passive: false });
+}
+
+function updateFreeCamera() {
+  const x = mouseControl.distance * Math.sin(mouseControl.phi) * Math.cos(mouseControl.theta);
+  const y = mouseControl.distance * Math.cos(mouseControl.phi);
+  const z = mouseControl.distance * Math.sin(mouseControl.phi) * Math.sin(mouseControl.theta);
+  camera.position.set(x, y, z);
+  camera.lookAt(2, 1, 0);
+}
+
+function setupKeyboard() {
+  window.addEventListener('keydown', e => {
+    // Don't trigger when typing in panels
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      togglePlay();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      stepBackward();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      stepForward();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      rewindToStart();
+    } else if (e.key === 'Escape') {
+      hidePanel('cases');
+      hidePanel('specs');
+    }
+  });
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+
+  // Advance simulation time when playing
+  if (isPlaying && !isSeeking) {
+    const prevTime = currentTime;
+    currentTime += dt * playbackRate;
+    if (currentTime >= TOTAL_DURATION) {
+      currentTime = TOTAL_DURATION;
+      pause();
+    }
+    const state = applyState(currentTime);
+    updateTimelineUI();
+
+    // Emit particles based on phase (forward play only)
+    if (state.phase === 'crush' && currentTime > prevTime) {
+      const p = (currentTime - PHASE_APPROACH) / PHASE_CRUSH;
+      if (p < 0.3) {
+        if (Math.random() < 0.7) {
+          const idx = Math.min(boxes.length - 1, Math.floor(p * 30 / 8));
+          emitSmoke(boxes[idx].position.x - 0.2, 0.6, 0, 4);
+          emitDebris(boxes[idx].position.x - 0.2, 0.7, 0, 5, 0xf5c623);
+        }
+      } else if (p < 0.7) {
+        if (Math.random() < 0.6) {
+          const idx = Math.min(boxes.length - 1, Math.floor(p * 10));
+          emitSmoke(boxes[idx].position.x - 0.15, 0.6, 0, 3);
+          emitDebris(boxes[idx].position.x - 0.15, 0.7, 0, 4, boxes[idx].userData.originalColor);
+        }
+      } else {
+        if (Math.random() < 0.4) {
+          const idx = Math.min(boxes.length - 1, Math.floor(p * 10));
+          emitSmoke(boxes[idx].position.x, 0.7, 0, 2);
+        }
+      }
+    }
+  }
+
+  updateParticles(dt);
+
+  if (cameraMode === 'cinematic' && !isPlaying && currentTime === 0) {
+    const t = clock.getElapsedTime() * 0.15;
+    camera.position.x = Math.sin(t) * 3 - 3;
+    camera.position.z = 6 + Math.cos(t) * 1.5;
+    camera.lookAt(0.5, 0.5, 0);
+  }
+
+  renderer.render(scene, camera);
+}
+
+init();
+</script>
+</body>
+</html>
