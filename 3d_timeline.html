@@ -88,6 +88,13 @@ html,body{height:100%;overflow:hidden;font-family:"Hiragino Sans","Yu Gothic","M
 .toggle-btn{background:rgba(10,22,40,.85);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);color:#fff;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;letter-spacing:.5px}
 .toggle-btn:hover{background:rgba(255,255,255,.1)}
 
+/* 製品切替トグル */
+.product-selector{display:flex;gap:3px;background:rgba(10,22,40,.85);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:4px;margin-right:4px}
+.product-btn{background:transparent;border:none;color:rgba(255,255,255,.7);padding:8px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600;letter-spacing:.5px;white-space:nowrap;transition:all .15s}
+.product-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.product-btn.active{background:#f9b234;color:#1a1a1a}
+.product-btn[data-product="pole"].active{background:#f08a24;color:#1a1a1a}
+
 .panel{position:fixed;inset:0;background:rgba(10,22,40,.96);backdrop-filter:blur(20px);z-index:50;padding:60px;overflow-y:auto;display:none;flex-direction:column}
 .panel.visible{display:flex}
 .panel-close{position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
@@ -149,8 +156,8 @@ html,body{height:100%;overflow:hidden;font-family:"Hiragino Sans","Yu Gothic","M
 
 <div class="hud">
   <div>
-    <div class="hud-title">ショックプロテクター SP-100<span class="tag-v3">タイムライン版</span></div>
-    <div class="hud-subtitle">SHOCK PROTECTOR · NEXCO/首都高速/阪神高速 採用実績</div>
+    <div class="hud-title"><span id="hud-title-text">ショックプロテクター SP-100</span><span class="tag-v3">タイムライン版</span></div>
+    <div class="hud-subtitle" id="hud-subtitle">SHOCK PROTECTOR · NEXCO/首都高速/阪神高速 採用実績</div>
   </div>
   <div class="hud-meta">
     本装置により尊い人命が救われました<br>
@@ -162,6 +169,10 @@ html,body{height:100%;overflow:hidden;font-family:"Hiragino Sans","Yu Gothic","M
 <div class="status-bar" id="status">準備完了 — 再生ボタンまたはシークバーを動かしてください</div>
 
 <div class="toggle-panel">
+  <div class="product-selector">
+    <button class="product-btn active" data-product="sp100" onclick="setProduct('sp100')">🛡 SP-100</button>
+    <button class="product-btn" data-product="pole" onclick="setProduct('pole')">🟠 ポールクッション</button>
+  </div>
   <button class="toggle-btn" onclick="showPanel('cases')">📋 事故事例</button>
   <button class="toggle-btn" onclick="showPanel('specs')">📊 試験成績</button>
   <div class="color-mode-selector" style="background:rgba(10,22,40,.85);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);padding:5px;margin-left:4px">
@@ -268,6 +279,7 @@ html,body{height:100%;overflow:hidden;font-family:"Hiragino Sans","Yu Gothic","M
 <!-- 事故事例パネル -->
 <div class="panel" id="panel-cases">
   <button class="panel-close" onclick="hidePanel('cases')">×</button>
+  <div data-for="sp100">
   <div class="panel-title">実際の事故事例</div>
   <div class="panel-subtitle">REAL-WORLD CASE STUDIES · NEXCO・首都高速・阪神高速</div>
   <div class="adopted-banner">
@@ -312,11 +324,41 @@ html,body{height:100%;overflow:hidden;font-family:"Hiragino Sans","Yu Gothic","M
     💬 <strong style="color:#ed6e6d">警察見解：</strong>「ショックプロテクターが無ければ、これらの事故は<strong style="color:#fff">死亡事故になっていた可能性が高い</strong>。」
     <span class="src">— 首都高速道路公団 技術より</span>
   </div>
-</div>
+  </div><!-- /data-for sp100 -->
+
+  <div data-for="pole" style="display:none">
+  <div class="panel-title">ポールクッションの用途</div>
+  <div class="panel-subtitle">POLE CUSHION · 分流部/中央分離帯 端部の視線誘導＋衝撃緩和</div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num">3本</div><div class="stat-label">連続設置で<br>段階的に破損吸収</div></div>
+    <div class="stat-card"><div class="stat-num">φ388</div><div class="stat-label">外径mm<br>（高さ805mm）</div></div>
+    <div class="stat-card"><div class="stat-num">3本</div><div class="stat-label">超高輝度<br>反射テープライン</div></div>
+    <div class="stat-card"><div class="stat-num">飛散<br>防止</div><div class="stat-label">ワイヤーでベースと<br>連結し破断片を保持</div></div>
+  </div>
+  <div class="cases-grid">
+    <div class="case-card">
+      <div class="case-type" style="margin-bottom:8px">設置場所</div>
+      <div class="case-detail"><strong>分流部（分岐の鼻先）・中央分離帯端部</strong>。ドライバーが誤進入しやすい三角導流帯の先端に立て、視線誘導と衝突被害の軽減を担う。</div>
+    </div>
+    <div class="case-card">
+      <div class="case-type" style="margin-bottom:8px">衝撃吸収の仕組み</div>
+      <div class="case-detail">緩衝材（発泡ポリスチレン）と<strong>緩衝ポール（鋼管 STK400）が段階的に破損</strong>することでエネルギーを吸収。ポールはベースプレートとワイヤーで接続され、破断時も飛散しない。</div>
+    </div>
+    <div class="case-card">
+      <div class="case-type" style="margin-bottom:8px">視認性</div>
+      <div class="case-detail">オレンジの筐体に<strong>黄色の超高輝度反射テープ3本ライン</strong>。夜間・悪天候でも遠方から存在を認識でき、そもそもの接触を減らす。</div>
+    </div>
+  </div>
+  <div class="police-quote" style="background:rgba(240,138,36,.1);border-left-color:#f08a24">
+    ⚠️ <strong style="color:#f08a24">位置づけ：</strong>ポールクッションは<strong style="color:#fff">低〜中速域での被害軽減＋視線誘導</strong>が主目的の端部設置型です。SP-100のような高速正面衝突の完全吸収装置とは用途が異なります。
+    <span class="src">— 本シミュレーションの数値は公開仕様に基づく参考値です</span>
+  </div>
+  </div><!-- /data-for pole -->
 
 <!-- 試験成績パネル -->
 <div class="panel" id="panel-specs">
   <button class="panel-close" onclick="hidePanel('specs')">×</button>
+  <div data-for="sp100">
   <div class="panel-title">公式試験成績</div>
   <div class="panel-subtitle">CERTIFIED TEST RESULTS · 大阪府立産業技術総合研究所</div>
   <div class="section-h">車両衝突試験結果（速度100km/h）</div>
@@ -338,6 +380,33 @@ html,body{height:100%;overflow:hidden;font-family:"Hiragino Sans","Yu Gothic","M
     <div class="spec-row"><div class="lbl">開発元</div><div class="val" style="grid-column:span 2">NKC開発株式会社 開発部 山崎</div></div>
     <div class="spec-row"><div class="lbl">論文番号</div><div class="val" style="grid-column:span 2">C-51「車両用衝突緩衝装置の開発」</div></div>
   </div>
+  </div><!-- /data-for sp100 -->
+
+  <div data-for="pole" style="display:none">
+  <div class="panel-title">ポールクッション PC-1 仕様</div>
+  <div class="panel-subtitle">PRODUCT SPECIFICATION · NKC開発株式会社</div>
+  <div class="section-h">寸法・構造</div>
+  <div class="spec-table">
+    <div class="spec-row"><div class="lbl">外形寸法</div><div class="val" style="grid-column:span 2">400 × 400 × 805 mm（本体外径 φ388）</div></div>
+    <div class="spec-row"><div class="lbl">筐体</div><div class="val" style="grid-column:span 2">ポリエチレン（オレンジ）</div></div>
+    <div class="spec-row"><div class="lbl">緩衝材</div><div class="val" style="grid-column:span 2">発泡ポリスチレン</div></div>
+    <div class="spec-row"><div class="lbl">緩衝ポール</div><div class="val" style="grid-column:span 2">鋼管 STK400</div></div>
+    <div class="spec-row"><div class="lbl">ベースプレート</div><div class="val" style="grid-column:span 2">鋼材 SS400 ／ ワイヤーでポールと連結（飛散防止）</div></div>
+    <div class="spec-row"><div class="lbl">反射</div><div class="val" style="grid-column:span 2">超高輝度反射テープ 3本ライン（黄）</div></div>
+  </div>
+  <div class="section-h">用途・設置</div>
+  <div class="spec-table">
+    <div class="spec-row"><div class="lbl">設置場所</div><div class="val" style="grid-column:span 2">分流部（分岐の鼻先）・中央分離帯端部</div></div>
+    <div class="spec-row"><div class="lbl">主目的</div><div class="val" style="grid-column:span 2">視線誘導＋衝突被害の軽減（低〜中速域）</div></div>
+    <div class="spec-row"><div class="lbl">吸収方式</div><div class="val" style="grid-column:span 2">緩衝材と鋼管ポールが段階的に破損してエネルギー吸収</div></div>
+    <div class="spec-row"><div class="lbl">施工</div><div class="val" style="grid-column:span 2">床版にアンカープレート接着（薄層40mm／標準80mm・400×1,000mm）</div></div>
+  </div>
+  <div class="section-h">本シミュレーションの数値について</div>
+  <div class="spec-table">
+    <div class="spec-row"><div class="lbl">数値の扱い</div><div class="stat" style="grid-column:span 2">個別の衝突試験値は公開仕様に記載が無いため、G・OIVは挙動を示す「参考値」です</div></div>
+    <div class="spec-row"><div class="lbl">開発元</div><div class="val" style="grid-column:span 2">NKC開発株式会社</div></div>
+  </div>
+  </div><!-- /data-for pole -->
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -357,6 +426,8 @@ let playbackRate = 1.0;
 let cameraMode = 'cinematic';
 let currentSpeed = 100;
 let colorMode = 'real';     // 'real' = 実物カラー（黄黒）, 'edu' = 教育カラー（緑黄赤）
+let currentProduct = 'sp100'; // 'sp100' = ショックプロテクター, 'pole' = ポールクッション
+let poles = [], poleGroup = null;   // ポールクッションの3D群
 let mouseControl = { isDown: false, lastX: 0, lastY: 0, theta: 0, phi: 0, distance: 18 };
 let isSeeking = false;
 
@@ -367,7 +438,29 @@ let suppressParticles = false;
 const COLORS = {
   bg: 0x0a1628, car: 0x2c5fa8, carHighlight: 0x4a8de0, carWindow: 0x88b8e8,
   carDark: 0x1a3a6a, soft: 0x5dcaa5, medium: 0xf9b234, hard: 0xed6e6d,
-  plate: 0x888780, wall: 0x5a5a5a, ground: 0xb8b8b8
+  plate: 0x888780, wall: 0x5a5a5a, ground: 0xb8b8b8,
+  // ポールクッション：オレンジ樽 + 黄色反射リング + 黄色ベース + 鋼管ポール
+  poleBody: 0xf08a24, poleReflect: 0xf5e13a, poleBase: 0xf2b21a, poleSteel: 0x9aa4ac
+};
+
+// 製品ごとのメタ情報（HUD・チャプター切替に使用）
+const PRODUCT_META = {
+  sp100: {
+    title: 'ショックプロテクター SP-100',
+    subtitle: 'SHOCK PROTECTOR · NEXCO/首都高速/阪神高速 採用実績',
+    chapters: [
+      { pct: 22.2, label: '衝突' }, { pct: 38, label: '段階1終' },
+      { pct: 60, label: '段階2終' }, { pct: 75.5, label: '停止' }
+    ]
+  },
+  pole: {
+    title: 'ポールクッション PC-1',
+    subtitle: 'POLE CUSHION · 分流部/中央分離帯 端部設置型 緩衝装置',
+    chapters: [
+      { pct: 22.2, label: '接触' }, { pct: 40, label: '1本目破損' },
+      { pct: 58, label: '2本目破損' }, { pct: 75.5, label: '停止' }
+    ]
+  }
 };
 
 window.showPanel = function(name) { document.getElementById('panel-' + name).classList.add('visible'); };
@@ -405,6 +498,59 @@ window.setColorMode = function(mode) {
   // 現在の状態を再描画
   applyState(currentTime);
 };
+
+// ======== 製品切替 ========
+window.setProduct = function(product) {
+  if (product === currentProduct) return;
+  currentProduct = product;
+
+  document.querySelectorAll('.product-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.product === product);
+  });
+
+  const meta = PRODUCT_META[product];
+  document.getElementById('hud-title-text').textContent = meta.title;
+  document.getElementById('hud-subtitle').textContent = meta.subtitle;
+
+  // 色モードトグルはSP-100専用（黄黒/特性色）。ポール時は隠す
+  const colorSel = document.querySelector('.color-mode-selector');
+  if (colorSel) colorSel.style.display = (product === 'sp100') ? '' : 'none';
+
+  // 試験成績・事故事例パネルを製品別に出し分け
+  document.querySelectorAll('[data-for]').forEach(el => {
+    el.style.display = (el.dataset.for === product) ? '' : 'none';
+  });
+
+  updateChapterMarkers(meta.chapters);
+
+  // 表示切替＋先頭へリセット
+  pause();
+  applyProductVisibility();
+  currentTime = 0;
+  clearAllParticles();
+  // 両製品の緩衝体を初期状態へ戻す
+  boxes.forEach(b => crushBox(b, 0));
+  poles.forEach(p => crushPole(p, 0));
+  applyState(0);
+  updateTimelineUI();
+  setCamera('cinematic');
+};
+
+function updateChapterMarkers(chapters) {
+  const track = document.getElementById('seek-track');
+  track.querySelectorAll('.chapter').forEach(c => c.remove());
+  chapters.forEach(ch => {
+    const div = document.createElement('div');
+    div.className = 'chapter';
+    div.style.left = ch.pct + '%';
+    const lbl = document.createElement('div');
+    lbl.className = 'chapter-label';
+    lbl.style.left = '0';
+    lbl.textContent = ch.label;
+    div.appendChild(lbl);
+    track.appendChild(div);
+  });
+}
 
 window.togglePlay = function() {
   if (isPlaying) {
@@ -514,12 +660,16 @@ function init() {
   animate();
 }
 
+let sp100Extra = [];   // SP-100専用の付随物（基台・剛体壁）— 製品切替で表示/非表示
+
 function buildScene() {
   buildCar();
   buildBoxes();
   buildWall();
+  buildPoles();
   buildSmokeSystem();
   buildDebrisSystem();
+  applyProductVisibility();
 }
 
 function buildCar() {
@@ -794,6 +944,7 @@ function buildBoxes() {
   baseMesh.castShadow = true;
   baseMesh.receiveShadow = true;
   scene.add(baseMesh);
+  sp100Extra.push(baseMesh);
 }
 
 function crushBox(mesh, amount) {
@@ -867,6 +1018,116 @@ function buildWall() {
   wall.castShadow = true;
   wall.receiveShadow = true;
   scene.add(wall);
+  sp100Extra.push(wall);
+}
+
+// ======== ポールクッション PC-1 ========
+// 実物: オレンジ樽型（外径φ388 / 高さ805mm）+ ドーム天面 + 黄色反射リング3本 + 黄色角ベース
+// 分流部の鼻先に3本連続設置する形で再現（手前から順に破損して段階吸収）
+const POLE_COUNT = 3;
+const POLE_SPACING = 0.95;   // 本間隔
+const POLE_START_X = -0.6;   // 1本目のX
+const POLE_RADIUS = 0.42;    // 表示半径（φ388mm≒0.39m を車スケールに合わせ調整）
+const POLE_HEIGHT = 1.15;    // 表示高さ（実805mmだが車比で存在感を出す）
+
+function buildPoles() {
+  poleGroup = new THREE.Group();
+  poles = [];
+
+  for (let i = 0; i < POLE_COUNT; i++) {
+    const g = new THREE.Group();
+    const x = POLE_START_X + i * POLE_SPACING;
+
+    // 黄色ベースプレート（角）
+    const baseGeo = new THREE.BoxGeometry(POLE_RADIUS * 2.15, 0.08, POLE_RADIUS * 2.15);
+    const baseMat = new THREE.MeshStandardMaterial({ color: COLORS.poleBase, roughness: 0.55, metalness: 0.2 });
+    const base = new THREE.Mesh(baseGeo, baseMat);
+    base.position.y = 0.04;
+    base.castShadow = true; base.receiveShadow = true;
+    g.add(base);
+
+    // 樽本体（オレンジ円柱）
+    const bodyH = POLE_HEIGHT;
+    const bodyGeo = new THREE.CylinderGeometry(POLE_RADIUS, POLE_RADIUS * 0.98, bodyH, 24, 6, true);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: COLORS.poleBody, roughness: 0.5, metalness: 0.1, side: THREE.DoubleSide });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 0.08 + bodyH / 2;
+    body.castShadow = true; body.receiveShadow = true;
+    body.userData.originalPositions = body.geometry.attributes.position.array.slice();
+    g.add(body);
+
+    // ドーム天面（半球）
+    const domeGeo = new THREE.SphereGeometry(POLE_RADIUS, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+    const dome = new THREE.Mesh(domeGeo, bodyMat);
+    dome.position.y = 0.08 + bodyH;
+    dome.castShadow = true;
+    g.add(dome);
+
+    // 黄色反射リング3本
+    const ringMat = new THREE.MeshStandardMaterial({ color: COLORS.poleReflect, roughness: 0.25, metalness: 0.15, emissive: COLORS.poleReflect, emissiveIntensity: 0.35 });
+    const ringYs = [0.30, 0.55, 0.80];   // 本体高さに対する比率
+    ringYs.forEach(ry => {
+      const ringGeo = new THREE.CylinderGeometry(POLE_RADIUS * 1.015, POLE_RADIUS * 1.015, bodyH * 0.11, 24, 1, true);
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.y = 0.08 + bodyH * ry;
+      g.add(ring);
+    });
+
+    // 内部の鋼管ポール（破損時に見える芯）
+    const steelGeo = new THREE.CylinderGeometry(0.06, 0.06, bodyH * 1.05, 12);
+    const steelMat = new THREE.MeshStandardMaterial({ color: COLORS.poleSteel, roughness: 0.35, metalness: 0.85 });
+    const steel = new THREE.Mesh(steelGeo, steelMat);
+    steel.position.y = 0.08 + bodyH / 2;
+    g.add(steel);
+
+    g.position.set(x, 0, 0);
+    // 破損アニメ用に回転ピボットを根元へ寄せるため userData に基準を保持
+    g.userData = { index: i, originalX: x, body: body, steel: steel, broken: 0 };
+    poleGroup.add(g);
+    poles.push(g);
+  }
+
+  // 路面の分流ゼブラ（鼻先の三角導流帯を示すマーキング）
+  const noseGeo = new THREE.ConeGeometry(0.9, POLE_SPACING * POLE_COUNT + 1.2, 4, 1);
+  const noseMat = new THREE.MeshStandardMaterial({ color: 0xd8d8d0, roughness: 0.9, metalness: 0.0, transparent: true, opacity: 0.35 });
+  const nose = new THREE.Mesh(noseGeo, noseMat);
+  nose.rotation.z = -Math.PI / 2;
+  nose.rotation.y = 0;
+  nose.position.set(POLE_START_X + (POLE_COUNT * POLE_SPACING) / 2, 0.02, 0);
+  nose.scale.set(1, 1, 0.5);
+  poleGroup.add(nose);
+
+  scene.add(poleGroup);
+}
+
+// ポール1本の破損アニメ（amount 0→1: 直立→根元から後方へ倒れ＋樽が圧壊）
+function crushPole(pole, amount) {
+  const a = Math.max(0, Math.min(1, amount));
+  // 根元ピボットで後方(+X)へ倒す
+  pole.rotation.z = -a * 1.15;               // 倒れ角
+  pole.position.x = pole.userData.originalX + a * 0.35;  // 押し込まれ
+  // 樽本体を軸方向へ圧壊（縦潰れ＋横膨らみ）
+  const body = pole.userData.body;
+  if (body && body.userData.originalPositions) {
+    const pos = body.geometry.attributes.position.array;
+    const orig = body.userData.originalPositions;
+    const squash = 1 - a * 0.45;
+    const bulge = 1 + a * 0.30;
+    for (let i = 0; i < pos.length; i += 3) {
+      pos[i]     = orig[i] * bulge;
+      pos[i + 1] = orig[i + 1] * squash;
+      pos[i + 2] = orig[i + 2] * bulge;
+    }
+    body.geometry.attributes.position.needsUpdate = true;
+    body.geometry.computeVertexNormals();
+  }
+}
+
+function applyProductVisibility() {
+  const isSP = currentProduct === 'sp100';
+  boxes.forEach(b => b.visible = isSP);
+  sp100Extra.forEach(o => o.visible = isSP);
+  if (poleGroup) poleGroup.visible = !isSP;
 }
 
 function buildSmokeSystem() {
@@ -1012,34 +1273,34 @@ function updateParticles(dt) {
 }
 
 // ======== DETERMINISTIC STATE — given time, compute everything ========
+// 返り値の crushProgress は 0→1 の緩衝進行度（SP-100=ボックス潰れ / ポール=手前から破損）
 function computeStateAtTime(t) {
+  return currentProduct === 'pole' ? computePoleState(t) : computeSP100State(t);
+}
+
+function computeSP100State(t) {
   const gFactor = currentSpeed / 100;
   const peakG = currentSpeed === 80 ? 19.2 : currentSpeed === 100 ? 17.7 : 17.7 * Math.sqrt(gFactor);
   const peakOIV = 12.2 * gFactor;
 
-  let speed, gForce, oiv, carX, boxCrush, carDamage, phase, statusText;
+  let speed, gForce, oiv, carX, crushProgress, carDamage, phase, statusText;
 
   if (t < PHASE_APPROACH) {
     const p = t / PHASE_APPROACH;
-    speed = currentSpeed;
-    gForce = 0;
-    oiv = 0;
+    speed = currentSpeed; gForce = 0; oiv = 0;
     carX = -12 + (-1.7 - (-12)) * p;
-    boxCrush = 0;
-    carDamage = 0;
-    phase = 'approach';
+    crushProgress = 0; carDamage = 0; phase = 'approach';
     statusText = '車が時速' + currentSpeed + 'kmで近づいています...';
   } else if (t < PHASE_APPROACH + PHASE_CRUSH) {
     const p = (t - PHASE_APPROACH) / PHASE_CRUSH;
     const easeOut = 1 - Math.pow(1 - p, 2);
     speed = currentSpeed * (1 - easeOut);
-    // Deterministic G — no noise (or use pseudoRandom based on t for stable noise)
     const baseG = Math.sin(p * Math.PI) * peakG;
     const detNoise = pseudoRandom(t * 100) * 1.5;
     gForce = Math.max(0, baseG + detNoise);
     oiv = peakOIV * (1 - Math.cos(p * Math.PI)) / 2;
-    boxCrush = easeOut;
-    carX = -1.7 + boxCrush * 2.0;
+    crushProgress = easeOut;
+    carX = -1.7 + crushProgress * 2.0;
     carDamage = Math.min(1, easeOut * (currentSpeed >= 120 ? 1.3 : 1.1));
     phase = 'crush';
     if (p < 0.3) statusText = '【段階1】先端の柔らかい部分が潰れ始めました';
@@ -1047,11 +1308,8 @@ function computeStateAtTime(t) {
     else statusText = '【段階3】後端の硬い部分が最終的に受け止め — ' + gForce.toFixed(1) + 'G / OIV ' + oiv.toFixed(1) + 'm/s';
   } else if (t < TOTAL_DURATION) {
     const p = (t - PHASE_APPROACH - PHASE_CRUSH) / PHASE_SETTLE;
-    speed = 0;
-    gForce = Math.max(0, 5 * (1 - p));
-    oiv = peakOIV;
-    boxCrush = 1;
-    carX = 0.3;
+    speed = 0; gForce = Math.max(0, 5 * (1 - p)); oiv = peakOIV;
+    crushProgress = 1; carX = 0.3;
     carDamage = currentSpeed >= 120 ? 1 : Math.min(1, currentSpeed / 120);
     phase = 'settle';
     statusText = currentSpeed === 80 ? '✓ 完全停止 — 乗員無傷' :
@@ -1059,13 +1317,61 @@ function computeStateAtTime(t) {
                  currentSpeed === 120 ? '✓ 停止完了 — 軽傷で生存（実事故事例: ヴィッツ無事）' :
                  '✓ 停止完了 — 130km/h実事故で無傷の実績あり';
   } else {
-    speed = 0; gForce = 0; oiv = peakOIV; carX = 0.3; boxCrush = 1;
+    speed = 0; gForce = 0; oiv = peakOIV; carX = 0.3; crushProgress = 1;
     carDamage = currentSpeed >= 120 ? 1 : Math.min(1, currentSpeed / 120);
-    phase = 'end';
-    statusText = '再生終了';
+    phase = 'end'; statusText = '再生終了';
   }
+  return { speed, gForce, oiv, carX, crushProgress, carDamage, phase, statusText };
+}
 
-  return { speed, gForce, oiv, carX, boxCrush, carDamage, phase, statusText };
+// ポールクッション：単列3本の破損型。SP-100より吸収は限定的で、視線誘導＋衝撃緩和が主目的。
+// 数値は公開仕様に個別試験値の記載が無いため「参考値」として提示する。
+function computePoleState(t) {
+  const gFactor = currentSpeed / 100;
+  // 破損型ゆえ残留Gは高め、OIVも基準(12.2)を上回りやすい＝低〜中速域向けであることを示す
+  const peakG = (currentSpeed === 80 ? 22 : 24) * Math.sqrt(gFactor);
+  const peakOIV = 12.2 * gFactor * 1.18;
+
+  let speed, gForce, oiv, carX, crushProgress, carDamage, phase, statusText;
+
+  if (t < PHASE_APPROACH) {
+    const p = t / PHASE_APPROACH;
+    speed = currentSpeed; gForce = 0; oiv = 0;
+    carX = -12 + (-1.4 - (-12)) * p;
+    crushProgress = 0; carDamage = 0; phase = 'approach';
+    statusText = '車が時速' + currentSpeed + 'kmで分流部の鼻先へ接近...';
+  } else if (t < PHASE_APPROACH + PHASE_CRUSH) {
+    const p = (t - PHASE_APPROACH) / PHASE_CRUSH;
+    const easeOut = 1 - Math.pow(1 - p, 1.7);
+    speed = currentSpeed * (1 - easeOut);
+    const baseG = Math.sin(p * Math.PI) * peakG;
+    // 各ポール破損の瞬間にGスパイク（決定論ノイズ）
+    const spike = Math.abs(Math.sin(p * Math.PI * 3)) * 3.5;
+    gForce = Math.max(0, baseG + spike + pseudoRandom(t * 100) * 1.5);
+    oiv = peakOIV * (1 - Math.cos(p * Math.PI)) / 2;
+    crushProgress = easeOut;
+    carX = -1.4 + crushProgress * 2.6;   // ポールは抵抗が小さく車がより進入
+    carDamage = Math.min(1, easeOut * (currentSpeed >= 120 ? 1.15 : 0.95));
+    phase = 'crush';
+    const nb = Math.min(POLE_COUNT, Math.floor(crushProgress * POLE_COUNT) + 1);
+    if (p < 0.34) statusText = '【1本目】緩衝材が圧壊し鋼管が根元から屈曲 — 飛散はワイヤーで防止';
+    else if (p < 0.66) statusText = '【2本目】ポールが順に破損して段階減速中 — ' + gForce.toFixed(1) + 'G';
+    else statusText = '【3本目】最終ポールで受け止め — ' + gForce.toFixed(1) + 'G / OIV ' + oiv.toFixed(1) + 'm/s（参考値）';
+  } else if (t < TOTAL_DURATION) {
+    const p = (t - PHASE_APPROACH - PHASE_CRUSH) / PHASE_SETTLE;
+    speed = 0; gForce = Math.max(0, 4 * (1 - p)); oiv = peakOIV;
+    crushProgress = 1; carX = 1.2;
+    carDamage = currentSpeed >= 120 ? 1 : Math.min(1, currentSpeed / 130);
+    phase = 'settle';
+    statusText = currentSpeed <= 80
+      ? '✓ 停止 — 低〜中速域で衝撃を緩和、車両損傷を軽減（参考値）'
+      : '✓ 停止 — 衝撃を段階的に吸収。分流部での視線誘導＋被害軽減が主目的';
+  } else {
+    speed = 0; gForce = 0; oiv = peakOIV; carX = 1.2; crushProgress = 1;
+    carDamage = currentSpeed >= 120 ? 1 : Math.min(1, currentSpeed / 130);
+    phase = 'end'; statusText = '再生終了';
+  }
+  return { speed, gForce, oiv, carX, crushProgress, carDamage, phase, statusText };
 }
 
 function applyState(t) {
@@ -1086,13 +1392,22 @@ function applyState(t) {
   const wheelAngle = -t * currentSpeed * 0.3 * (s.speed > 0 ? 1 : 1);
   carParts.wheels.forEach(w => { w.rotation.y = wheelAngle; });
 
-  // Boxes
-  boxes.forEach((box, i) => {
-    const crushThreshold = i / 10;
-    const localCrush = Math.max(0, Math.min(1, (s.boxCrush - crushThreshold) * 3));
-    box.userData.crushAmount = localCrush;
-    crushBox(box, localCrush);
-  });
+  // 緩衝体（製品別）
+  if (currentProduct === 'pole') {
+    poles.forEach((pole, i) => {
+      const thr = i / POLE_COUNT;
+      const localBreak = Math.max(0, Math.min(1, (s.crushProgress - thr) * POLE_COUNT * 1.3));
+      pole.userData.broken = localBreak;
+      crushPole(pole, localBreak);
+    });
+  } else {
+    boxes.forEach((box, i) => {
+      const crushThreshold = i / 10;
+      const localCrush = Math.max(0, Math.min(1, (s.crushProgress - crushThreshold) * 3));
+      box.userData.crushAmount = localCrush;
+      crushBox(box, localCrush);
+    });
+  }
 
   // Car deformation
   deformCar(s.carDamage, t);
@@ -1290,22 +1605,33 @@ function animate() {
     // Emit particles based on phase (forward play only)
     if (state.phase === 'crush' && currentTime > prevTime) {
       const p = (currentTime - PHASE_APPROACH) / PHASE_CRUSH;
-      if (p < 0.3) {
+      if (currentProduct === 'pole') {
+        // 破損中のポール位置から発泡片＋鋼管片を飛散
+        const pi = Math.min(POLE_COUNT - 1, Math.floor(p * POLE_COUNT));
+        const px = poles[pi].userData.originalX;
         if (Math.random() < 0.7) {
-          const idx = Math.min(boxes.length - 1, Math.floor(p * 30 / 8));
-          emitSmoke(boxes[idx].position.x - 0.2, 0.6, 0, 4);
-          emitDebris(boxes[idx].position.x - 0.2, 0.7, 0, 5, 0xf5c623);
-        }
-      } else if (p < 0.7) {
-        if (Math.random() < 0.6) {
-          const idx = Math.min(boxes.length - 1, Math.floor(p * 10));
-          emitSmoke(boxes[idx].position.x - 0.15, 0.6, 0, 3);
-          emitDebris(boxes[idx].position.x - 0.15, 0.7, 0, 4, boxes[idx].userData.originalColor);
+          emitSmoke(px, 0.7, 0, 3);
+          emitDebris(px, 0.9, 0, 5, COLORS.poleBody);       // オレンジ樹脂片
+          if (Math.random() < 0.5) emitDebris(px, 0.8, 0, 3, COLORS.poleReflect); // 反射片
         }
       } else {
-        if (Math.random() < 0.4) {
-          const idx = Math.min(boxes.length - 1, Math.floor(p * 10));
-          emitSmoke(boxes[idx].position.x, 0.7, 0, 2);
+        if (p < 0.3) {
+          if (Math.random() < 0.7) {
+            const idx = Math.min(boxes.length - 1, Math.floor(p * 30 / 8));
+            emitSmoke(boxes[idx].position.x - 0.2, 0.6, 0, 4);
+            emitDebris(boxes[idx].position.x - 0.2, 0.7, 0, 5, 0xf5c623);
+          }
+        } else if (p < 0.7) {
+          if (Math.random() < 0.6) {
+            const idx = Math.min(boxes.length - 1, Math.floor(p * 10));
+            emitSmoke(boxes[idx].position.x - 0.15, 0.6, 0, 3);
+            emitDebris(boxes[idx].position.x - 0.15, 0.7, 0, 4, boxes[idx].userData.originalColor);
+          }
+        } else {
+          if (Math.random() < 0.4) {
+            const idx = Math.min(boxes.length - 1, Math.floor(p * 10));
+            emitSmoke(boxes[idx].position.x, 0.7, 0, 2);
+          }
         }
       }
     }
