@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>操作説明書 — ショックプロテクター / ポールクッション 3D資料</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a1628;--bg2:#0e1e34;--card:rgba(255,255,255,.05);--line:rgba(255,255,255,.12);
+  --ink:#fff;--muted:rgba(255,255,255,.68);--faint:rgba(255,255,255,.45);
+  --sp:#f9b234;--pole:#f08a24;--safe:#5dcaa5;
+}
+html{scroll-behavior:smooth}
+body{font-family:"Hiragino Sans","Yu Gothic","Meiryo",sans-serif;background:
+  radial-gradient(1100px 600px at 80% -10%,rgba(240,138,36,.10),transparent 60%),
+  radial-gradient(900px 500px at 0% 100%,rgba(55,138,221,.10),transparent 60%),
+  linear-gradient(180deg,var(--bg),#08111f);color:var(--ink);line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;padding:56px 24px 100px}
+
+.eyebrow{font-size:12px;letter-spacing:.3em;color:var(--pole);font-weight:700;text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(26px,4.4vw,40px);font-weight:800;line-height:1.25;letter-spacing:-.01em;margin-bottom:14px}
+.lede{color:var(--muted);font-size:16px;max-width:680px}
+
+.links{display:flex;flex-wrap:wrap;gap:14px;margin:30px 0 8px}
+.link-btn{display:flex;align-items:center;gap:12px;padding:16px 22px;border-radius:14px;text-decoration:none;color:#0a1628;font-weight:700;font-size:15px;transition:transform .15s,box-shadow .15s;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.link-btn.a{background:linear-gradient(135deg,#ffc55a,#f9b234)}
+.link-btn.b{background:linear-gradient(135deg,#ffab52,#f08a24)}
+.link-btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.45)}
+.link-btn .ico{font-size:22px}
+.link-btn .sub{display:block;font-weight:500;font-size:12px;opacity:.75;margin-top:2px}
+.copyhint{color:var(--faint);font-size:12.5px;margin-top:12px}
+.copyhint code{background:rgba(255,255,255,.08);padding:2px 8px;border-radius:6px;font-size:12px;color:var(--muted);word-break:break-all}
+
+section{margin-top:64px}
+.sec-head{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.sec-badge{flex:none;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#0a1628}
+.sec-badge.sp{background:var(--sp)} .sec-badge.pole{background:var(--pole)}
+.sec-head h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.sec-sub{color:var(--muted);font-size:14.5px;margin:0 0 26px 48px}
+
+.figure{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:28px}
+.figure img{display:block;width:100%;height:auto;border-bottom:1px solid var(--line)}
+.figure .cap{padding:12px 20px;font-size:13px;color:var(--faint);letter-spacing:.02em}
+.figure .cap b{color:var(--muted);font-weight:600}
+
+.steps{list-style:none;counter-reset:s;display:grid;gap:12px;margin:6px 0 30px}
+.steps li{counter-increment:s;position:relative;padding:16px 20px 16px 60px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.steps li::before{content:counter(s);position:absolute;left:16px;top:15px;width:28px;height:28px;border-radius:50%;background:var(--pole);color:#0a1628;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+.steps.sp li::before{background:var(--sp)}
+.steps li b{color:var(--ink);font-weight:700}
+.steps li .d{color:var(--muted);font-size:14px;display:block;margin-top:2px}
+.key{display:inline-block;background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:6px;padding:1px 8px;font-size:12px;font-family:monospace;color:var(--ink);margin:0 2px}
+
+.callrow{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:720px){.callrow{grid-template-columns:1fr}}
+
+.note{background:rgba(240,138,36,.09);border:1px solid rgba(240,138,36,.32);border-left:4px solid var(--pole);border-radius:10px;padding:18px 22px;margin-top:8px}
+.note .t{color:var(--pole);font-weight:700;font-size:13px;letter-spacing:1px;margin-bottom:6px}
+.note p{color:var(--muted);font-size:14px}
+.note p+p{margin-top:8px}
+
+.divider{height:1px;background:var(--line);margin:56px 0}
+footer{color:var(--faint);font-size:13px;line-height:1.9;margin-top:60px;border-top:1px solid var(--line);padding-top:24px}
+footer a{color:var(--muted)}
+.pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:20px;margin-left:8px;vertical-align:middle}
+.pill.sp{background:rgba(249,178,52,.16);color:var(--sp);border:1px solid rgba(249,178,52,.4)}
+.pill.pole{background:rgba(240,138,36,.16);color:var(--pole);border:1px solid rgba(240,138,36,.4)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">操作説明書 · USER GUIDE</div>
+  <h1>車両衝突緩衝装置 3D資料<br>操作のご案内</h1>
+  <p class="lede">NKC開発株式会社「ショックプロテクター SP-100」と「ポールクッション PC-1」の
+  3Dシミュレーション、およびプレゼン資料の使い方をまとめました。以下のリンクからブラウザですぐにご覧いただけます（インストール不要・スマホ/PC対応）。</p>
+
+  <div class="links">
+    <a class="link-btn a" href="https://popsaneshima-design.github.io/crash-sim-graph/3d_timeline.html" target="_blank" rel="noopener">
+      <span class="ico">🧊</span><span>3Dシミュレーション<span class="sub">SP-100 ⇄ ポールクッション 切替つき</span></span>
+    </a>
+    <a class="link-btn b" href="https://popsaneshima-design.github.io/crash-sim-graph/pole_presentation.html" target="_blank" rel="noopener">
+      <span class="ico">📑</span><span>プレゼン資料（6枚）<span class="sub">ポールクッション PC-1 解説デッキ</span></span>
+    </a>
+  </div>
+  <p class="copyhint">リンクをコピーして共有 →
+    <code>https://popsaneshima-design.github.io/crash-sim-graph/3d_timeline.html</code></p>
+
+  <!-- ============ SECTION 1: 3D SIM ============ -->
+  <section>
+    <div class="sec-head"><div class="sec-badge sp">1</div><h2>3Dシミュレーションの使い方</h2></div>
+    <p class="sec-sub">画面上で車が緩衝装置に衝突し、段階的に潰れていく様子を、速度やカメラを変えながら再生できます。</p>
+
+    <div class="figure">
+      <img src="img/01_sp100_overview.png" alt="SP-100の初期画面">
+      <div class="cap"><b>起動直後の画面（ショックプロテクター SP-100）</b> — 左に各種メーター、右にカメラ切替、下に再生バー。</div>
+    </div>
+
+    <ol class="steps sp">
+      <li><b>製品を切り替える</b><span class="d">画面左上の <b>「🛡 SP-100 / 🟠 ポールクッション」</b> ボタンで、2つの製品を切り替えられます。切り替えると3Dモデル・数値・解説がすべて入れ替わります。</span></li>
+      <li><b>衝突を再生する</b><span class="d">画面下中央の <b>▶ 再生ボタン</b> を押すと衝突が始まります。バーをドラッグして好きな瞬間へ移動（シーク）も可能。<span class="key">0.25×〜2×</span>で再生速度、<span class="key">80〜130</span>で衝突速度を変えられます。</span></li>
+      <li><b>カメラを変える</b><span class="d">画面右の <b>シネマティック／クローズアップ／真横／真上／正面／自由視点</b> で見る角度を切り替え。「自由視点」ではマウスドラッグで回転、ホイールで拡大縮小できます。</span></li>
+      <li><b>メーターを読む</b><span class="d">左の <b>SPEED（速度）・G-FORCE（加速度）・OIV（乗員衝突速度）</b>、右下の <b>CRUMPLE（車両損傷度）</b> が衝突中にリアルタイムで変化します。</span></li>
+      <li><b>詳しい資料を開く</b><span class="d">上部の <b>「📋 事故事例」「📊 試験成績」</b> ボタンで、実績や公式仕様の詳細パネルが開きます（×で閉じる）。</span></li>
+    </ol>
+
+    <div class="callrow">
+      <div class="figure">
+        <img src="img/02_pole_overview.png" alt="ポールクッションに切替">
+        <div class="cap"><b>「ポールクッション」に切替</b> — 3本の樽型ポールが並びます。</div>
+      </div>
+      <div class="figure">
+        <img src="img/03_pole_crash.png" alt="衝突の瞬間">
+        <div class="cap"><b>衝突の再生中（真横カメラ）</b> — ポールが順に折れ、G-FORCEが変化。</div>
+      </div>
+    </div>
+
+    <div class="callrow">
+      <div class="figure">
+        <img src="img/04_pole_specs.png" alt="試験成績パネル">
+        <div class="cap"><b>「📊 試験成績」パネル</b> — 寸法・素材と、公式設計値（12G/20G以下/120kN）。</div>
+      </div>
+      <div class="figure">
+        <img src="img/05_pole_cases.png" alt="用途パネル">
+        <div class="cap"><b>「📋 事故事例／用途」パネル</b> — 設置場所・仕組み・視認性を解説。</div>
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="t">MEMO</div>
+      <p>ポールクッションの G / OIV の数値・波形は、NKC公式カタログの設計値レンジ（<b>設計加速度 12G ／ 20G(200m/s²)以下に抑制 ／ 破断荷重 120kN</b>）に基づいて表示しています。ショックプロテクター SP-100 側は大阪府立産業技術総合研究所の試験結果に基づく数値です。</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ SECTION 2: DECK ============ -->
+  <section>
+    <div class="sec-head"><div class="sec-badge pole">2</div><h2>プレゼン資料（デッキ）の使い方</h2></div>
+    <p class="sec-sub">ポールクッション PC-1 を6枚のスライドで解説する資料です。プレゼンや画面共有にそのまま使えます。</p>
+
+    <div class="figure">
+      <img src="img/06_deck_cover.png" alt="デッキ表紙">
+      <div class="cap"><b>表紙（1 / 6）</b> — 製品概要と主要スペックを表示。</div>
+    </div>
+
+    <ol class="steps">
+      <li><b>スライドを送る</b><span class="d">画面下中央の <b>‹ ›</b> ボタン、またはキーボードの <span class="key">←</span> <span class="key">→</span> でページを移動します。</span></li>
+      <li><b>衝突を再生する（3枚目）</b><span class="d">3枚目「衝突シミュレーション再現」で <b>▶ 衝突を再生</b> を押すと、3本のポールが順に折れて減速する様子と加速度メーターが動きます。<b>リセット</b>で戻せます。</span></li>
+      <li><b>全画面表示にする</b><span class="d">キーボードの <span class="key">F</span> で全画面、<span class="key">Esc</span> で解除。プレゼン時に便利です。</span></li>
+    </ol>
+
+    <div class="callrow">
+      <div class="figure">
+        <img src="img/07_deck_sim.png" alt="デッキのライブ衝突">
+        <div class="cap"><b>3枚目：ライブ衝突シミュ</b> — ▶で3本のポールが破断・減速。</div>
+      </div>
+      <div class="figure">
+        <img src="img/08_deck_structure.png" alt="デッキの構造図">
+        <div class="cap"><b>5枚目：装置の中身</b> — 樽の断面と4層の役割を図解。</div>
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="t">構成（全6枚）</div>
+      <p>① 表紙　② どこに・何のため　③ ライブ衝突シミュレーション　④ 「12G ってどれくらい？」比較　⑤ 装置の中身（構造図）　⑥ まとめ</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <footer>
+    <div>本資料は NKC開発株式会社の製品「ショックプロテクター SP-100<span class="pill sp">走行部・正面衝突向け</span>」「ポールクッション PC-1<span class="pill pole">端部設置型</span>」の理解を助けるための3D教材・提案資料です。</div>
+    <div style="margin-top:10px">数値の出典：NKC開発株式会社 公式カタログ ／ 大阪府立産業技術総合研究所 試験結果。実際の製品仕様・適用条件は最新のメーカー資料をご確認ください。</div>
+    <div style="margin-top:14px">
+      🧊 <a href="https://popsaneshima-design.github.io/crash-sim-graph/3d_timeline.html" target="_blank" rel="noopener">3Dシミュレーション</a>　／
+      📑 <a href="https://popsaneshima-design.github.io/crash-sim-graph/pole_presentation.html" target="_blank" rel="noopener">プレゼン資料</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
