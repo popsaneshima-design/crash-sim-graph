@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ポールクッション PC-1 — 端部緩衝装置 シミュレーション結果</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:"Hiragino Sans","Yu Gothic","Meiryo",sans-serif;background:#0a1628;color:#fff}
+.deck{position:relative;width:100vw;height:100vh}
+.slide{position:absolute;inset:0;padding:60px 80px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .4s ease;background:#0a1628}
+.slide.active{opacity:1;pointer-events:auto}
+
+.nav{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;background:rgba(20,30,50,.85);padding:10px 20px;border-radius:40px;backdrop-filter:blur(10px);z-index:100;border:1px solid rgba(255,255,255,.1)}
+.nav button{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.nav button:hover:not(:disabled){background:rgba(255,255,255,.15);border-color:#fff}
+.nav button:disabled{opacity:.3;cursor:not-allowed}
+.page-info{font-size:13px;color:rgba(255,255,255,.7);min-width:50px;text-align:center}
+
+.slide-num{position:absolute;top:24px;right:32px;font-size:12px;color:rgba(255,255,255,.4);letter-spacing:2px}
+
+.title{font-size:44px;font-weight:700;line-height:1.3;letter-spacing:-.01em;margin-bottom:12px}
+.subtitle{font-size:18px;color:rgba(255,255,255,.7);font-weight:400;letter-spacing:.05em}
+.section-num{font-size:14px;font-weight:600;color:#f08a24;letter-spacing:3px;margin-bottom:20px}
+
+.cover{justify-content:center;align-items:flex-start}
+.cover-badge{display:inline-block;background:rgba(240,138,36,.15);border:1px solid rgba(240,138,36,.5);color:#f5b04a;font-size:13px;font-weight:600;letter-spacing:2px;padding:6px 16px;border-radius:20px;margin-bottom:24px}
+.cover-meta{margin-top:48px;padding-top:24px;border-top:2px solid rgba(255,255,255,.15);font-size:14px;color:rgba(255,255,255,.6);line-height:2}
+.cover-meta strong{color:#fff;font-weight:500;display:inline-block;min-width:100px}
+
+.specs{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:32px}
+.spec{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px;border-left:3px solid #f08a24}
+.spec-label{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:8px;letter-spacing:1px}
+.spec-value{font-size:28px;font-weight:600;color:#fff}
+.spec-unit{font-size:14px;color:rgba(255,255,255,.5);margin-left:4px}
+
+.stage-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:24px}
+.crash-stage{position:relative;width:100%;max-width:1100px;height:280px;background:linear-gradient(180deg,#1a2c4a 0%,#0e1a2e 100%);border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1)}
+.road-line{position:absolute;bottom:50px;left:0;right:0;height:1px;background:rgba(255,255,255,.2)}
+/* 導流帯（分流部の鼻先ゼブラ） */
+.gore{position:absolute;bottom:51px;right:24px;width:150px;height:70px;background:repeating-linear-gradient(-45deg,rgba(255,255,255,.16) 0 10px,transparent 10px 20px);border-left:2px solid rgba(255,255,255,.4);border-radius:0 0 0 40px}
+.car{position:absolute;bottom:55px;width:120px;height:64px;transition:left .05s linear,transform .05s linear;z-index:5}
+.car-body{width:100%;height:100%;background:linear-gradient(180deg,#3266ad 0%,#1a2c5b 100%);border-radius:8px 18px 6px 6px;position:relative;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.car-body::before{content:"";position:absolute;top:8px;left:18px;right:18px;height:22px;background:#5a8ed4;border-radius:5px 10px 3px 3px}
+.car-body::after{content:"";position:absolute;bottom:-7px;width:18px;height:18px;background:#1a1a1a;border-radius:50%;left:14px;box-shadow:72px 0 0 #1a1a1a}
+.poles{position:absolute;bottom:55px;display:flex;gap:26px;align-items:flex-end}
+.pole{position:relative;width:44px;height:150px;transform-origin:bottom center;transition:transform .12s ease,opacity .12s linear}
+.pole-body{position:absolute;left:0;right:0;bottom:12px;top:0;background:linear-gradient(90deg,#c9701a 0%,#f08a24 45%,#ffab52 55%,#c9701a 100%);border-radius:22px 22px 6px 6px}
+.pole-body::before,.pole-body::after,.pole-stripe{content:"";position:absolute;left:-1px;right:-1px;height:11px;background:#f5e13a;box-shadow:0 0 6px rgba(245,225,58,.5)}
+.pole-body::before{top:34px}
+.pole-body::after{top:62px}
+.pole-stripe{top:90px}
+.pole-base{position:absolute;left:-4px;right:-4px;bottom:0;height:14px;background:#f2b21a;border-radius:3px}
+.tag{position:absolute;font-size:11px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.4);padding:4px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;backdrop-filter:blur(4px)}
+
+.gauge-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;width:100%;max-width:1100px}
+.gauge{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:18px 24px}
+.gauge-label{font-size:13px;color:rgba(255,255,255,.65);margin-bottom:6px;letter-spacing:.5px}
+.gauge-value{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums}
+.gauge-unit{font-size:14px;color:rgba(255,255,255,.5);margin-left:6px;font-weight:400}
+.gauge-bar-bg{margin-top:10px;height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.gauge-bar{height:100%;background:#378ADD;transition:width .05s linear,background .05s linear;border-radius:4px}
+
+.controls{display:flex;align-items:center;gap:14px;margin-top:20px;width:100%;max-width:1100px}
+.btn-play{padding:12px 28px;font-size:15px;background:#f08a24;color:#1a1a1a;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:all .15s;font-family:inherit}
+.btn-play:hover:not(:disabled){background:#ffab52;transform:translateY(-1px)}
+.btn-play:disabled{opacity:.5;cursor:not-allowed}
+.btn-reset{padding:12px 20px;font-size:14px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-reset:hover{background:rgba(255,255,255,.08)}
+.status{flex:1;font-size:14px;color:rgba(255,255,255,.75);font-weight:400}
+
+.compare-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:32px;flex:1;align-content:center}
+.compare-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:22px 16px;text-align:center;display:flex;flex-direction:column;justify-content:center;min-height:200px}
+.compare-card.safe{background:rgba(40,160,100,.12);border-color:rgba(40,160,100,.4)}
+.compare-card.warn{background:rgba(249,178,52,.12);border-color:rgba(249,178,52,.4)}
+.compare-card.danger{background:rgba(228,75,74,.12);border-color:rgba(228,75,74,.4)}
+.compare-card.featured{background:rgba(240,138,36,.18);border:2px solid #f08a24;transform:scale(1.05)}
+.compare-g{font-size:36px;font-weight:700;margin-bottom:10px}
+.compare-card.safe .compare-g{color:#5dcaa5}
+.compare-card.warn .compare-g{color:#f9b234}
+.compare-card.featured .compare-g{color:#fff}
+.compare-card.danger .compare-g{color:#ed6e6d}
+.compare-title{font-size:14px;font-weight:600;margin-bottom:6px}
+.compare-desc{font-size:11px;color:rgba(255,255,255,.65);line-height:1.5}
+.compare-card.featured .compare-badge{display:inline-block;background:#f08a24;color:#1a1a1a;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;margin-bottom:10px;letter-spacing:.5px}
+
+.struct-stage{flex:1;display:grid;grid-template-columns:0.85fr 1.15fr;gap:36px;margin-top:24px;align-items:center}
+.anatomy{position:relative;display:flex;justify-content:center;align-items:flex-end;height:100%}
+.an-pole{position:relative;width:150px;height:300px}
+.an-shell{position:absolute;inset:0 0 24px 0;background:linear-gradient(90deg,#b3610f,#f08a24 50%,#b3610f);border-radius:60px 60px 10px 10px;overflow:hidden}
+.an-foam{position:absolute;left:34px;right:34px;top:34px;bottom:52px;background:repeating-linear-gradient(0deg,rgba(255,255,255,.22) 0 6px,rgba(255,255,255,.08) 6px 12px);border-radius:40px 40px 4px 4px}
+.an-steel{position:absolute;left:50%;transform:translateX(-50%);top:20px;bottom:0;width:16px;background:linear-gradient(90deg,#7f8a92,#c3ccd2 50%,#7f8a92);border-radius:6px}
+.an-base{position:absolute;left:-6px;right:-6px;bottom:0;height:24px;background:#f2b21a;border-radius:4px}
+.an-stripe{position:absolute;left:-2px;right:-2px;height:16px;background:#f5e13a;box-shadow:0 0 8px rgba(245,225,58,.5)}
+.callouts{display:flex;flex-direction:column;gap:14px}
+.callout{display:flex;gap:14px;align-items:flex-start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 18px;border-left:4px solid #f08a24}
+.callout .co-num{flex:none;width:26px;height:26px;border-radius:50%;background:#f08a24;color:#1a1a1a;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.callout .co-t{font-size:14px;font-weight:600;margin-bottom:3px}
+.callout .co-d{font-size:12px;color:rgba(255,255,255,.7);line-height:1.55}
+
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:32px;flex:1}
+.metaphor{display:flex;align-items:center;justify-content:center;gap:32px;margin-top:24px;flex:1}
+.metaphor-card{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:32px;text-align:center;max-width:380px}
+.metaphor-card.bad{border-left:4px solid #ed6e6d}
+.metaphor-card.good{border-left:4px solid #5dcaa5}
+.metaphor-icon{font-size:64px;margin-bottom:16px;line-height:1}
+.metaphor-title{font-size:18px;font-weight:600;margin-bottom:10px}
+.metaphor-desc{font-size:14px;color:rgba(255,255,255,.75);line-height:1.7}
+.metaphor-vs{font-size:24px;color:rgba(255,255,255,.4);font-weight:300}
+
+.kbd-hint{position:fixed;bottom:80px;right:24px;font-size:11px;color:rgba(255,255,255,.4);text-align:right;line-height:1.6}
+.kbd-hint kbd{background:rgba(255,255,255,.1);padding:2px 6px;border-radius:3px;font-family:monospace;font-size:10px}
+
+.ref-note{position:absolute;bottom:26px;left:80px;font-size:11px;color:rgba(255,255,255,.4)}
+
+@media (max-width:900px){.title{font-size:32px}.specs{grid-template-columns:repeat(2,1fr)}.compare-grid{grid-template-columns:repeat(2,1fr)}.summary-grid{grid-template-columns:1fr}.struct-stage{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 01 COVER -->
+<section class="slide active cover" data-slide="1">
+  <div class="slide-num">01 / 06</div>
+  <div class="cover-badge">POLE CUSHION · PC-1</div>
+  <div class="section-num">SIMULATION RESULT</div>
+  <h1 class="title">暫定2車線用 端部緩衝装置<br>ポールクッション PC-1</h1>
+  <p class="subtitle">分流部の鼻先を守る「破断型」クラッシュクッション 解説</p>
+  <div class="cover-meta">
+    <div><strong>装置仕様</strong>オレンジ樽型 外径φ388 × 高さ805mm ／ 3本連続設置</div>
+    <div><strong>破断荷重</strong>120kN で鋼管ポールが破断（ワイヤーφ6×3・φ9×1で飛散防止）</div>
+    <div><strong>設計加速度</strong>衝突時 20G(200m/s²) 以下に抑制 ／ 設計値 12G(120m/s²)</div>
+    <div><strong>出典</strong>NKC開発株式会社 公式カタログ</div>
+  </div>
+</section>
+
+<!-- 02 CONDITIONS -->
+<section class="slide" data-slide="2">
+  <div class="slide-num">02 / 06</div>
+  <div class="section-num">01 — WHERE & WHAT</div>
+  <h2 class="title">どこに、何のために置くか</h2>
+  <p class="subtitle">道路が分かれる「分流部の鼻先」— ドライバーが誤って突っ込みやすい端部に設置</p>
+  <div class="specs">
+    <div class="spec"><div class="spec-label">本体外径</div><div class="spec-value">φ388<span class="spec-unit">mm</span></div></div>
+    <div class="spec"><div class="spec-label">高さ</div><div class="spec-value">805<span class="spec-unit">mm</span></div></div>
+    <div class="spec"><div class="spec-label">破断荷重</div><div class="spec-value">120<span class="spec-unit">kN</span></div></div>
+    <div class="spec"><div class="spec-label">設置</div><div class="spec-value">3<span class="spec-unit">本 連続</span></div></div>
+  </div>
+  <div style="margin-top:40px;background:rgba(240,138,36,.08);border-left:4px solid #f08a24;padding:24px;border-radius:8px">
+    <div style="font-size:14px;color:#f5b04a;font-weight:600;margin-bottom:8px;letter-spacing:1px">POINT</div>
+    <div style="font-size:16px;line-height:1.8;color:rgba(255,255,255,.9)">分流部の鼻先は、車が<strong style="color:#fff">導流帯を無視して直進すると真正面から突っ込む</strong>危険地点。ここに何も無ければコンクリート端部に激突しますが、ポールクッションは<strong style="color:#fff">支柱が身代わりに折れて</strong>衝撃を受け流し、加速度を安全域まで下げます。</div>
+  </div>
+</section>
+
+<!-- 03 LIVE SIMULATION -->
+<section class="slide" data-slide="3">
+  <div class="slide-num">03 / 06</div>
+  <div class="section-num">02 — LIVE SIMULATION</div>
+  <h2 class="title" style="font-size:32px;margin-bottom:8px">衝突シミュレーション再現</h2>
+  <p class="subtitle" style="font-size:14px">下のボタンを押すと、3本のポールが順に折れて減速する様子を再現できます</p>
+  <div class="stage-wrap">
+    <div class="crash-stage" id="stage">
+      <div class="road-line"></div>
+      <div class="gore"></div>
+      <div class="tag" style="top:14px;left:18px">車（端部へ進入）</div>
+      <div class="tag" style="top:14px;right:18px">ポールクッション ×3</div>
+      <div class="car" id="car" style="left:14px"><div class="car-body"></div></div>
+      <div class="poles" id="poles" style="right:70px"></div>
+    </div>
+    <div class="gauge-row">
+      <div class="gauge"><div class="gauge-label">車の速度</div><div><span class="gauge-value" id="speed-val">80</span><span class="gauge-unit">km/h</span></div><div class="gauge-bar-bg"><div class="gauge-bar" id="speed-bar" style="width:100%"></div></div></div>
+      <div class="gauge"><div class="gauge-label">体にかかる力（加速度）</div><div><span class="gauge-value" id="g-val">0.0</span><span class="gauge-unit">G</span></div><div class="gauge-bar-bg"><div class="gauge-bar" id="g-bar" style="width:0%;background:#5dcaa5"></div></div></div>
+    </div>
+    <div class="controls">
+      <button class="btn-play" id="play-btn" onclick="playSim()">▶ 衝突を再生</button>
+      <button class="btn-reset" onclick="resetSim()">リセット</button>
+      <span class="status" id="status">準備完了 — 80km/hで端部へ向かいます</span>
+    </div>
+  </div>
+</section>
+
+<!-- 04 G COMPARISON -->
+<section class="slide" data-slide="4">
+  <div class="slide-num">04 / 06</div>
+  <div class="section-num">03 — G-FORCE COMPARISON</div>
+  <h2 class="title">12G ってどれくらい？</h2>
+  <p class="subtitle">日常の体験から致命的な衝撃まで、横一列で比較</p>
+  <div class="compare-grid">
+    <div class="compare-card safe"><div class="compare-g">1G</div><div class="compare-title">普段の生活</div><div class="compare-desc">立っている状態<br>地球の重力</div></div>
+    <div class="compare-card safe"><div class="compare-g">3〜4G</div><div class="compare-title">ジェットコースター</div><div class="compare-desc">遊園地で<br>体感できる範囲</div></div>
+    <div class="compare-card featured"><div class="compare-badge">ポールクッション</div><div class="compare-g">12G</div><div class="compare-title">設計加速度</div><div class="compare-desc">20G以下に抑え<br>さらに安全側の<br>12Gに設定</div></div>
+    <div class="compare-card warn"><div class="compare-g">20G</div><div class="compare-title">抑制の上限</div><div class="compare-desc">これ以下に必ず<br>収める設計基準</div></div>
+    <div class="compare-card danger"><div class="compare-g">100G超</div><div class="compare-title">端部に直接衝突</div><div class="compare-desc">緩衝装置なし<br>致命的</div></div>
+  </div>
+  <div style="margin-top:32px;text-align:center;font-size:14px;color:rgba(255,255,255,.7);line-height:1.8">端部に直接ぶつかれば <strong style="color:#ed6e6d">100G以上</strong> ですが、ポールが順に折れることで <strong style="color:#f08a24">12G</strong>（20G以下）まで下げます。<br>つまり<strong style="color:#fff">支柱が身代わりになって「致命的な衝撃」を「耐えられる衝撃」に変える</strong>装置です。</div>
+</section>
+
+<!-- 05 STRUCTURE -->
+<section class="slide" data-slide="5">
+  <div class="slide-num">05 / 06</div>
+  <div class="section-num">04 — DEVICE STRUCTURE</div>
+  <h2 class="title" style="font-size:32px">装置の中身</h2>
+  <p class="subtitle">外は樹脂の樽、中は「壊れて吸収する」多層構造</p>
+  <div class="struct-stage">
+    <div class="anatomy">
+      <div class="an-pole">
+        <div class="an-shell"></div>
+        <div class="an-foam"></div>
+        <div class="an-steel"></div>
+        <div class="an-stripe" style="top:70px"></div>
+        <div class="an-stripe" style="top:130px"></div>
+        <div class="an-stripe" style="top:190px"></div>
+        <div class="an-base"></div>
+      </div>
+    </div>
+    <div class="callouts">
+      <div class="callout"><div class="co-num">1</div><div><div class="co-t">外殻：ポリエチレン（オレンジ樽）</div><div class="co-d">視認性の高いオレンジ。黄色の超高輝度反射テープ3本ラインで夜間・悪天候でも遠方から認識でき、そもそもの接触を減らす。</div></div></div>
+      <div class="callout"><div class="co-num">2</div><div><div class="co-t">緩衝材：発泡ポリスチレン</div><div class="co-d">衝突の初期エネルギーを圧壊しながら吸収。急な反発を防ぎ、加速度の立ち上がりをなだらかにする。</div></div></div>
+      <div class="callout"><div class="co-num">3</div><div><div class="co-t">緩衝ポール：鋼管 STK400</div><div class="co-d">約120kNの荷重で根元から破断。折れることでエネルギーを消費し、加速度を12G（20G以下）に抑える主役。</div></div></div>
+      <div class="callout"><div class="co-num">4</div><div><div class="co-t">ベース SS400 ＋ ワイヤーロープ</div><div class="co-d">ベースは床版にアンカー固定。破断したポールはワイヤー（φ6×3・φ9×1）で連結され、破断片が飛散しない。</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 CONCLUSION -->
+<section class="slide" data-slide="6">
+  <div class="slide-num">06 / 06</div>
+  <div class="section-num">05 — CONCLUSION</div>
+  <h2 class="title">まとめ — 身代わりに折れて、受け流す</h2>
+  <p class="subtitle">命を守る仕組みを、誰でもわかる言葉で</p>
+  <div class="metaphor">
+    <div class="metaphor-card bad">
+      <div class="metaphor-icon">🧱</div>
+      <div class="metaphor-title">端部に何も無い場合</div>
+      <div class="metaphor-desc">硬いコンクリート端部に正面衝突。<br><strong style="color:#fff">100G以上</strong> の衝撃が車と<br>乗員を直撃します（致命的）</div>
+    </div>
+    <div class="metaphor-vs">VS</div>
+    <div class="metaphor-card good">
+      <div class="metaphor-icon">🟠</div>
+      <div class="metaphor-title">ポールクッションがある場合</div>
+      <div class="metaphor-desc">3本の支柱が順に折れて力を消費。<br><strong style="color:#fff">12G</strong>（20G以下）まで衝撃が下がり、<br>破断片もワイヤーで飛ばない</div>
+    </div>
+  </div>
+  <div style="margin-top:32px;background:rgba(240,138,36,.1);border:1px solid rgba(240,138,36,.3);border-radius:12px;padding:24px;text-align:center">
+    <div style="font-size:13px;color:#f5b04a;font-weight:600;letter-spacing:2px;margin-bottom:8px">FINAL POINT</div>
+    <div style="font-size:18px;line-height:1.8;color:#fff">ポールクッションは <strong style="color:#f08a24">分流部の鼻先</strong> で、支柱が<strong style="color:#f08a24">120kNで破断</strong>しながら段階的に衝撃を吸収し、<br>加速度を<strong style="color:#f08a24">設計12G（20G以下）</strong>に抑えて、乗員の生存空間を守ります。</div>
+  </div>
+</section>
+
+</div>
+
+<div class="nav">
+  <button onclick="prevSlide()" id="prev-btn">‹</button>
+  <div class="page-info"><span id="cur-page">1</span> / <span id="total-page">6</span></div>
+  <button onclick="nextSlide()" id="next-btn">›</button>
+</div>
+
+<div class="kbd-hint">
+  <kbd>←</kbd> <kbd>→</kbd> でスライド移動<br>
+  <kbd>F</kbd> で全画面 / <kbd>Esc</kbd> で解除
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 6;
+document.getElementById('total-page').textContent = totalSlides;
+
+function showSlide(n){
+  if(n<1||n>totalSlides) return;
+  document.querySelectorAll('.slide').forEach(s=>s.classList.remove('active'));
+  document.querySelector('[data-slide="'+n+'"]').classList.add('active');
+  currentSlide = n;
+  document.getElementById('cur-page').textContent = n;
+  document.getElementById('prev-btn').disabled = (n===1);
+  document.getElementById('next-btn').disabled = (n===totalSlides);
+  if(n!==3) resetSim();
+}
+function nextSlide(){ if(currentSlide<totalSlides) showSlide(currentSlide+1); }
+function prevSlide(){ if(currentSlide>1) showSlide(currentSlide-1); }
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight'||e.key===' ') nextSlide();
+  else if(e.key==='ArrowLeft') prevSlide();
+  else if(e.key==='f'||e.key==='F'){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+});
+
+// ===== 2D pole-crash simulation =====
+const car = document.getElementById('car');
+const polesEl = document.getElementById('poles');
+const speedVal = document.getElementById('speed-val');
+const speedBar = document.getElementById('speed-bar');
+const gVal = document.getElementById('g-val');
+const gBar = document.getElementById('g-bar');
+const status = document.getElementById('status');
+const playBtn = document.getElementById('play-btn');
+
+const POLE_N = 3;
+function buildPoles(){
+  polesEl.innerHTML = '';
+  for(let i=0;i<POLE_N;i++){
+    const el = document.createElement('div');
+    el.className = 'pole';
+    el.innerHTML = '<div class="pole-body"><span class="pole-stripe"></span></div><div class="pole-base"></div>';
+    polesEl.appendChild(el);
+  }
+}
+buildPoles();
+
+let animFrame = null;
+let isPlaying = false;
+
+function resetSim(){
+  if(animFrame) cancelAnimationFrame(animFrame);
+  isPlaying = false;
+  car.style.left = '14px';
+  car.style.transform = 'translateY(0)';
+  buildPoles();
+  speedVal.textContent = '80';
+  speedBar.style.width = '100%';
+  speedBar.style.background = '#378ADD';
+  gVal.textContent = '0.0';
+  gBar.style.width = '0%';
+  gBar.style.background = '#5dcaa5';
+  status.textContent = '準備完了 — 80km/hで端部へ向かいます';
+  playBtn.textContent = '▶ 衝突を再生';
+  playBtn.disabled = false;
+}
+
+function playSim(){
+  if(isPlaying) return;
+  isPlaying = true;
+  playBtn.disabled = true;
+  playBtn.textContent = '再生中...';
+
+  const startTime = performance.now();
+  const totalDuration = 4500;
+  const stage = document.getElementById('stage');
+  const stageWidth = stage.offsetWidth;
+  const carStartLeft = 14;
+  const carWidth = 120;
+  // ポール列の左端付近まで車を進める
+  const carEndLeft = stageWidth - 70 - (POLE_N*44 + (POLE_N-1)*26) - carWidth + 40;
+
+  const phaseApproach = 1000;
+  const phaseCrush = 2400;
+  const phaseSettle = 1100;
+  const PEAK_G = 12; // 設計加速度
+
+  const poleEls = polesEl.querySelectorAll('.pole');
+
+  function tick(now){
+    const elapsed = now - startTime;
+    let speed, gForce, carPos, crush;
+
+    if(elapsed < phaseApproach){
+      const p = elapsed / phaseApproach;
+      speed = 80; gForce = 0;
+      carPos = carStartLeft + (carEndLeft - carStartLeft) * p;
+      crush = 0;
+      status.textContent = '車が時速80kmで端部へ近づいています...';
+    } else if(elapsed < phaseApproach + phaseCrush){
+      const p = (elapsed - phaseApproach) / phaseCrush;
+      const easeOut = 1 - Math.pow(1 - p, 1.7);
+      speed = 80 * (1 - easeOut);
+      const baseG = Math.sin(p * Math.PI) * PEAK_G;
+      const spike = Math.abs(Math.sin(p * Math.PI * 3)) * 2.2;   // 各ポール破断のスパイク
+      gForce = Math.min(19.8, Math.max(0, baseG + spike + (Math.random()-0.5)*1.0));
+      crush = easeOut;
+      carPos = carEndLeft + crush * (POLE_N*44 + (POLE_N-1)*26) * 0.85;
+      const broken = Math.min(POLE_N, Math.floor(crush*POLE_N)+1);
+      if(p < 0.34) status.textContent = '【1本目】約120kNで鋼管ポールが破断・緩衝材が圧壊';
+      else if(p < 0.66) status.textContent = '【2本目】ポールが順に折れて段階減速 — ' + gForce.toFixed(1) + 'G';
+      else status.textContent = '【3本目】最終ポールで受け止め — ' + gForce.toFixed(1) + 'G（設計12G / 上限20G）';
+    } else {
+      const p = Math.min((elapsed - phaseApproach - phaseCrush) / phaseSettle, 1);
+      speed = 0;
+      gForce = Math.max(0, 4 * (1 - p));
+      crush = 1;
+      carPos = carEndLeft + (POLE_N*44 + (POLE_N-1)*26) * 0.85;
+      status.textContent = '✓ 停止 — 加速度を12G（20G以下）に抑制、乗員の生存空間を確保';
+    }
+
+    car.style.left = carPos + 'px';
+    const shake = (gForce > 5) ? (Math.random() - 0.5) * 2.5 : 0;
+    car.style.transform = 'translateY(' + shake + 'px)';
+
+    // ポールを手前から順に倒す
+    poleEls.forEach((el,i)=>{
+      const thr = i / POLE_N;
+      const local = Math.max(0, Math.min(1, (crush - thr) * POLE_N * 1.3));
+      el.style.transform = 'rotate(' + (local * 74) + 'deg)';
+      if(local > 0.5) el.style.opacity = 1 - (local-0.5) * 0.5;
+    });
+
+    speedVal.textContent = Math.round(speed);
+    speedBar.style.width = (speed / 80 * 100) + '%';
+    speedBar.style.background = speed > 40 ? '#378ADD' : speed > 10 ? '#f9b234' : '#5F5E5A';
+
+    gVal.textContent = (Math.round(gForce * 10) / 10).toFixed(1);
+    gBar.style.width = Math.min(100, gForce / 25 * 100) + '%';
+    gBar.style.background = gForce < 10 ? '#5dcaa5' : gForce < 18 ? '#f9b234' : '#ed6e6d';
+
+    if(elapsed < totalDuration){
+      animFrame = requestAnimationFrame(tick);
+    } else {
+      isPlaying = false;
+      playBtn.disabled = false;
+      playBtn.textContent = '▶ もう一度再生';
+    }
+  }
+  animFrame = requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>
